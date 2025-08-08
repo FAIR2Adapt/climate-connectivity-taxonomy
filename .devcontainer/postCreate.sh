@@ -27,8 +27,38 @@ cat <<'EOF' >> skosmos-src/dockerfiles/config/config-docker-compose.ttl
   skosmos:fullAlphabeticalIndex true .
 EOF
 
-# Run docker compose
-docker compose -f skosmos-src/docker-compose.yml up -d --build
+# Sometimes Docker is not ready when we want to use it, so we want to make sure it is ready
+ensure_docker() {
+  if ! docker info >/dev/null 2>&1; then
+    echo "[INFO] Starting Docker daemon…"
+    sudo /usr/local/share/docker-init.sh || true
+  fi
+  for i in {1..90}; do
+    if docker info >/dev/null 2>&1; then
+      echo "[INFO] Docker is ready."
+      return 0
+    fi
+    echo "[INFO] Waiting for Docker…"
+    sleep 1
+  done
+  echo "[ERROR] Docker daemon did not become ready."
+  ps -ef | grep -E '[d]ockerd' || true
+  sudo tail -n 200 /var/log/dockerd.log 2>/dev/null || true
+  exit 1
+}
+
+# Wait for Docker
+ensure_docker
+
+# Retry Docker-compose three times in case the daemon flaps
+for a in 1 2 3; do
+  if docker compose -f skosmos-src/docker-compose.yml up -d --build; then
+    break
+  fi
+  echo "[WARN] docker compose failed (attempt $a), retrying in 3s…"
+  sleep 3
+  ensure_docker
+done
 
 # Wait until SPARQL endpoint is ready
 for i in {1..60}; do
