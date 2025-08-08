@@ -15,3 +15,4 @@ else
   echo "To check the logs, press F1 and run Codespaces: View creation log
   echo "To rebuild the Codespace container, press F1 and run Codespaces: Rebuild Container
   echo
+fi
