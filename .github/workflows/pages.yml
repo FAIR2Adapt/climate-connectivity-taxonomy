@@ -1,4 +1,4 @@
-name: Build and deploy MAIA taxonomy to GitHub Pages
+name: Build and deploy Climate Connectivity Taxonomy to GitHub Pages
 
 # Builds a static SkoHub Vocabs site from the raw concepts.ttl export and
 # publishes it to GitHub Pages. The raw export stays untouched in the repo;

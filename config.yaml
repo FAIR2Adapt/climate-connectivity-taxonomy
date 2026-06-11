@@ -12,7 +12,7 @@ searchableAttributes:
   - "definition"
   - "scopeNote"
 ui:
-  title: "MAIA taxonomy" # Title is mandatory
+  title: "Climate Connectivity Taxonomy" # Title is mandatory
   logo: "skohub-signet-color.svg" # Path
   colors:
     skoHubWhite: "rgb(255, 255, 255)"
