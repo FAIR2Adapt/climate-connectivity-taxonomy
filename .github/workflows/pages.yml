@@ -1,0 +1,81 @@
+name: Build and deploy MAIA taxonomy to GitHub Pages
+
+# Builds a static SkoHub Vocabs site from the raw concepts.ttl export and
+# publishes it to GitHub Pages. The raw export stays untouched in the repo;
+# scripts/prepare_vocab.py normalises it (licence, hierarchy, de-duplication)
+# at build time, so dropping in a fresh export and committing is enough to
+# refresh the published site.
+
+on:
+  # rebuild when the pipeline itself changes
+  push:
+    branches: [main]
+    paths:
+      - config.yaml
+      - scripts/**
+      - .github/workflows/pages.yml
+  # let the maintainer trigger a refresh from the live hub by hand
+  workflow_dispatch:
+  # and refresh automatically once a week (Monday 04:00 UTC)
+  schedule:
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment, but let an in-progress run finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install rdflib
+        run: pip install rdflib
+
+      - name: Fetch the complete vocabulary from the connectivity-hub
+        # Pulls the full tree (top concepts AND their children) by crawling the
+        # hierarchy links, so the published site always matches the live hub.
+        run: python scripts/fetch_vocab.py concepts.fetched.ttl
+
+      - name: Normalise the vocabulary (licence + hierarchy + de-dup)
+        run: |
+          mkdir -p data
+          python scripts/prepare_vocab.py concepts.fetched.ttl data/concepts.ttl
+
+      - name: Build the SkoHub site
+        run: |
+          # Project Pages are served from /<repo>, so the site must be built
+          # with that path prefix (SkoHub reads it from BASEURL).
+          echo "BASEURL=/${GITHUB_REPOSITORY#*/}" > .env
+          mkdir -p public && chmod 777 public
+          docker run --rm \
+            -v "$PWD/public:/app/public" \
+            -v "$PWD/data:/app/data" \
+            -v "$PWD/.env:/app/.env" \
+            -v "$PWD/config.yaml:/app/config.yaml" \
+            skohub/skohub-vocabs-docker:latest
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

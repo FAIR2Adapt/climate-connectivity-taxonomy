@@ -1,4 +1,33 @@
+# MAIA taxonomy
+
+## Browse the taxonomy online
+
+The MAIA taxonomy is published as a static, browsable website on GitHub Pages:
+
+**https://fair2adapt.github.io/maia/**
+
+The site is built automatically by [`.github/workflows/pages.yml`](.github/workflows/pages.yml):
+
+1. `scripts/fetch_vocab.py` fetches the **complete** vocabulary from the
+   connectivity-hub (top concepts *and* their children, by crawling the
+   hierarchy — the plain export in `concepts.ttl` only contains top concepts).
+2. `scripts/prepare_vocab.py` normalises it for [SkoHub Vocabs](https://github.com/skohub-io/skohub-vocabs):
+   adds a licence, makes `broader`/`narrower` consistent so the hierarchy shows,
+   and de-duplicates same-language labels. It is idempotent.
+3. SkoHub builds the static site and it is deployed to GitHub Pages.
+
+**To refresh the published site after the taxonomy changes in the hub:** just
+re-run the workflow — *Actions → "Build and deploy MAIA taxonomy to GitHub
+Pages" → Run workflow*. It also refreshes automatically every Monday. No file
+needs to be committed; the pipeline always pulls the live vocabulary.
+
+The licence applied to the published vocabulary is set once in
+`scripts/prepare_vocab.py` (`DEFAULT_LICENSE`).
+
 # Previewing Vocabulary in GitHub Codespaces
+
+The Codespace/Skosmos setup below is the internal tool for previewing and
+reviewing the vocabulary (it reads the `concepts.ttl` snapshot in this repo).
 
 1. In the GitHub repo, go to **Code → Codespaces → Create codespace on main**. This starts a VS Code environment and brings up Skosmos in Docker for preview.
 
