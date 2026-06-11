@@ -21,7 +21,7 @@ on:
     - cron: "0 4 * * 1"
 
 permissions:
-  contents: read
+  contents: write   # to commit the fetched concepts.ttl snapshot back to the repo
   pages: write
   id-token: write
 
@@ -47,6 +47,22 @@ jobs:
         # Pulls the full tree (top concepts AND their children) by crawling the
         # hierarchy links, so the published site always matches the live hub.
         run: python scripts/fetch_vocab.py concepts.fetched.ttl
+
+      - name: Save the fetched vocabulary as concepts.ttl (record of what was deployed)
+        # Commit the exact data this run published, so the repo always holds a
+        # static, versioned snapshot of the live taxonomy. concepts.ttl is not in
+        # this workflow's trigger paths, so this commit does not start a new run.
+        run: |
+          cp concepts.fetched.ttl concepts.ttl
+          if git diff --quiet -- concepts.ttl; then
+            echo "concepts.ttl unchanged — nothing to commit"
+          else
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add concepts.ttl
+            git commit -m "Update concepts.ttl snapshot from connectivity-hub [skip ci]"
+            git push
+          fi
 
       - name: Normalise the vocabulary (licence + hierarchy + de-dup)
         run: |

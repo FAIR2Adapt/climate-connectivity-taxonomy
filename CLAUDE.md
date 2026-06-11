@@ -40,9 +40,14 @@ The published site is built by, in order:
    Silicon. `BASEURL=/maia` sets the Pages path prefix. `config.yaml` holds the SkoHub config.
 
 Refresh the site after the taxonomy changes: re-run the workflow (Actions → Run workflow) or wait
-for the weekly cron. Nothing needs to be committed — it always pulls the live vocabulary.
+for the weekly cron. It always pulls the live vocabulary.
 
-The committed `concepts.ttl` is the "product" only for the **internal Skosmos preview** below.
+After fetching, the workflow **commits the fetched complete vocabulary back to `concepts.ttl`**
+(`[skip ci]`, so it does not re-trigger — `concepts.ttl` is not in the trigger paths). So
+`concepts.ttl` is a static, versioned record of exactly what was last published, and it also feeds
+the **internal Skosmos preview** below (which therefore now gets the complete vocabulary). This
+needs `permissions: contents: write` on the workflow; if branch protection blocks the bot push,
+the snapshot commit step will fail (the site still deploys).
 
 ## The two moving parts
 
