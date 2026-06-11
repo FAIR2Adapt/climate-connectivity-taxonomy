@@ -18,8 +18,12 @@ The site is built automatically by [`.github/workflows/pages.yml`](.github/workf
 
 **To refresh the published site after the taxonomy changes in the hub:** just
 re-run the workflow — *Actions → "Build and deploy MAIA taxonomy to GitHub
-Pages" → Run workflow*. It also refreshes automatically every Monday. No file
-needs to be committed; the pipeline always pulls the live vocabulary.
+Pages" → Run workflow*. It also refreshes automatically every Monday. The
+pipeline always pulls the live vocabulary; you don't need to edit anything.
+
+After each run the workflow commits the exact vocabulary it fetched back to
+`concepts.ttl`, so the repo always holds a static, versioned snapshot of what was
+published (and `git log -- concepts.ttl` shows how the taxonomy changed over time).
 
 The licence applied to the published vocabulary is set once in
 `scripts/prepare_vocab.py` (`DEFAULT_LICENSE`).
