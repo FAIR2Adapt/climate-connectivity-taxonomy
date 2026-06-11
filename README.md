@@ -1,10 +1,11 @@
-# MAIA taxonomy
+# Climate Connectivity Taxonomy
 
 ## Browse the taxonomy online
 
-The MAIA taxonomy is published as a static, browsable website on GitHub Pages:
+The Climate Connectivity Taxonomy (CC Taxonomy) is published as a static,
+browsable website on GitHub Pages:
 
-**https://fair2adapt.github.io/maia/**
+**https://fair2adapt.github.io/climate-connectivity-taxonomy/**
 
 The site is built automatically by [`.github/workflows/pages.yml`](.github/workflows/pages.yml):
 
@@ -17,8 +18,8 @@ The site is built automatically by [`.github/workflows/pages.yml`](.github/workf
 3. SkoHub builds the static site and it is deployed to GitHub Pages.
 
 **To refresh the published site after the taxonomy changes in the hub:** just
-re-run the workflow — *Actions → "Build and deploy MAIA taxonomy to GitHub
-Pages" → Run workflow*. It also refreshes automatically every Monday. The
+re-run the workflow — *Actions → "Build and deploy Climate Connectivity
+Taxonomy to GitHub Pages" → Run workflow*. It also refreshes automatically every Monday. The
 pipeline always pulls the live vocabulary; you don't need to edit anything.
 
 After each run the workflow commits the exact vocabulary it fetched back to

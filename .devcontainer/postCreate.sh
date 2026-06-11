@@ -19,9 +19,9 @@ sed -i.bak -e '/^:unesco /,/^ *\.$/d' -e '/^:stw /,/^ *\.$/d' skosmos-src/docker
 
 # Append the vocabulary block info
 cat <<'EOF' >> skosmos-src/dockerfiles/config/config-docker-compose.ttl
-:MAIA a skosmos:Vocabulary, void:Dataset ;
-  dc:title "MAIA"@en ;
-  skosmos:shortName "MAIA" ;
+:CCTaxonomy a skosmos:Vocabulary, void:Dataset ;
+  dc:title "Climate Connectivity Taxonomy"@en ;
+  skosmos:shortName "CC Taxonomy" ;
   skosmos:defaultLanguage "en" ;
   void:uriSpace "http://connectivity-hub.com/terms/" ;
   skosmos:sparqlEndpoint <http://fuseki:3030/skosmos/sparql> ;

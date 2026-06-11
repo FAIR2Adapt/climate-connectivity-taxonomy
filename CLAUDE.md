@@ -4,15 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-`maia` (repo `FAIR2Adapt/maia`) holds the **MAIA taxonomy** — a SKOS vocabulary — plus the
-tooling to preview it with [Skosmos](https://github.com/NatLibFi/Skosmos). It is part of the
-FAIR2Adapt workspace and is related to `weADAPT-connectivity-hub/`: the taxonomy lives upstream
-at the connectivity-hub and is mirrored here for browsing/editing.
+Repo `FAIR2Adapt/climate-connectivity-taxonomy` holds the **Climate Connectivity Taxonomy**
+(CC Taxonomy; formerly "MAIA taxonomy") — a SKOS vocabulary — plus the tooling to preview it with
+[Skosmos](https://github.com/NatLibFi/Skosmos). It is part of the FAIR2Adapt workspace and is
+related to `weADAPT-connectivity-hub/`: the taxonomy lives upstream at the connectivity-hub and is
+mirrored here for browsing/editing. (The local working directory may still be named `maia`.)
 
 The repo has **two independent data paths**, and it is important not to confuse them:
 
 - **Public site** (`.github/workflows/pages.yml` → GitHub Pages at
-  `https://fair2adapt.github.io/maia/`). This does **not** use the committed `concepts.ttl`.
+  `https://fair2adapt.github.io/climate-connectivity-taxonomy/`). This does **not** use the
+  committed `concepts.ttl`.
   It fetches the *complete* vocabulary live from the hub, normalises it, and builds a static
   [SkoHub Vocabs](https://github.com/skohub-io/skohub-vocabs) site. See "Public site pipeline".
 - **Internal preview** (the `.devcontainer/` Codespace). This *does* use the committed
@@ -37,7 +39,9 @@ The published site is built by, in order:
 3. SkoHub builds the site via the **`skohub/skohub-vocabs-docker:latest`** image (Node 18; the
    local `npm` build fails on Node ≥ 20 because of Gatsby's bundled `lmdb`/`msgpackr`). The image
    is `linux/amd64`-only — fine on GitHub runners; add `--platform linux/amd64` to run it on Apple
-   Silicon. `BASEURL=/maia` sets the Pages path prefix. `config.yaml` holds the SkoHub config.
+   Silicon. `BASEURL` (derived from the repo name, e.g. `/climate-connectivity-taxonomy`) sets the
+   Pages path prefix. `config.yaml` holds the SkoHub config (UI title = "Climate Connectivity
+   Taxonomy"); `prepare_vocab.py` also rewrites the scheme title if it still says "MAIA".
 
 Refresh the site after the taxonomy changes: re-run the workflow (Actions → Run workflow) or wait
 for the weekly cron. It always pulls the live vocabulary.
@@ -52,7 +56,8 @@ the snapshot commit step will fail (the site still deploys).
 ## The two moving parts
 
 1. **`concepts.ttl`** — the entire vocabulary in one Turtle file (~2.7 MB). It is the
-   `skos:ConceptScheme` `<http://connectivity-hub.com/terms/>` (title "MAIA taxonomy") followed
+   `skos:ConceptScheme` `<http://connectivity-hub.com/terms/>` (hub title currently "MAIA taxonomy",
+   rewritten to "Climate Connectivity Taxonomy" by `prepare_vocab.py`) followed
    by every `skos:Concept`. Concept URIs are `http://connectivity-hub.com/terms/<uuid>`. This is
    the file loaded into the triplestore for preview, so editing the vocabulary = editing this file
    (or regenerating it, see below).
@@ -77,7 +82,7 @@ checkout. The flow, driven by `devcontainer.json`:
 - **`postCreate.sh`** (postCreateCommand) does the real work:
   - clones Skosmos into `skosmos-src/` (gitignored / untracked),
   - edits `skosmos-src/dockerfiles/config/config-docker-compose.ttl`: deletes the bundled
-    `:unesco` / `:stw` demo vocab blocks, appends a `:MAIA` `skosmos:Vocabulary` block pointing at
+    `:unesco` / `:stw` demo vocab blocks, appends a `:CCTaxonomy` `skosmos:Vocabulary` block pointing at
     the Fuseki SPARQL endpoint and graph `http://example.org/graph/dev`, and rewrites
     `skosmos:baseHref` to the Codespace's public `-9090` URL,
   - waits for the Docker daemon, brings up `docker compose -f skosmos-src/docker-compose.yml`

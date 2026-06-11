@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Normalise the raw MAIA taxonomy export so SkoHub Vocabs can build a good site.
+"""Normalise the raw Climate Connectivity Taxonomy export so SkoHub Vocabs can build a good site.
 
 The vocabulary is exported from the connectivity-hub as-is ("dirty"): it has no
 licence, every concept is flagged as a top concept (so no hierarchy shows), and a
@@ -19,8 +19,14 @@ from rdflib import Graph, Literal, URIRef
 from rdflib.namespace import DCTERMS, RDF, SKOS
 
 # Licence applied to the concept scheme when it has none. Change here (or pass a
-# third CLI arg) if the official MAIA licence differs.
+# third CLI arg) if the official licence differs.
 DEFAULT_LICENSE = URIRef("https://creativecommons.org/licenses/by/4.0/")
+
+# The vocabulary was renamed from "MAIA taxonomy" to "Climate Connectivity
+# Taxonomy". Until the hub itself is updated, rewrite any scheme title still
+# carrying the old name. This is a no-op once the hub serves the new name.
+OLD_TITLE_MARKER = "MAIA"
+NEW_TITLE = "Climate Connectivity Taxonomy"
 
 # Predicates that SkoHub treats as one value per language (a LanguageMap). If the
 # export carries several values in the same language, we keep the longest one so
@@ -32,6 +38,19 @@ SINGLE_VALUED_PER_LANG = [
     DCTERMS.title,
     DCTERMS.description,
 ]
+
+
+def rename_scheme(g: Graph) -> int:
+    """Replace any scheme title still containing the old name with NEW_TITLE."""
+    renamed = 0
+    for scheme in g.subjects(RDF.type, SKOS.ConceptScheme):
+        for predicate in (DCTERMS.title, SKOS.prefLabel):
+            for obj in list(g.objects(scheme, predicate)):
+                if isinstance(obj, Literal) and OLD_TITLE_MARKER in str(obj):
+                    g.remove((scheme, predicate, obj))
+                    g.add((scheme, predicate, Literal(NEW_TITLE, lang=obj.language or "en")))
+                    renamed += 1
+    return renamed
 
 
 def add_license(g: Graph) -> int:
@@ -116,6 +135,7 @@ def main() -> None:
     g.parse(src, format="turtle")
     before = len(g)
 
+    renamed = rename_scheme(g)
     licenses = add_license(g)
     demoted, promoted = normalise_hierarchy(g)
     deduped = dedupe_language_maps(g)
@@ -123,6 +143,7 @@ def main() -> None:
     g.serialize(destination=dst, format="turtle")
 
     print(f"parsed {before} triples from {src}")
+    print(f"  renamed {renamed} scheme title(s) to '{NEW_TITLE}'")
     print(f"  licence added to {licenses} scheme(s)")
     print(f"  hierarchy: demoted {demoted} child concept(s) from top level, "
           f"promoted {promoted} root(s)")

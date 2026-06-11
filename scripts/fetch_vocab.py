@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch the *complete* MAIA taxonomy from the connectivity-hub.
+"""Fetch the *complete* Climate Connectivity Taxonomy from the connectivity-hub.
 
 The previous exporter only downloaded the concepts listed in the scheme's
 skos:hasTopConcept, which drops every child concept (anything reachable only via
