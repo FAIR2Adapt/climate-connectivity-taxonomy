@@ -13,22 +13,33 @@ mirrored here for browsing/editing. (The local working directory may still be na
 The repo has **two independent data paths**, and it is important not to confuse them:
 
 - **Public site** (`.github/workflows/pages.yml` → GitHub Pages at
-  `https://fair2adapt.github.io/climate-connectivity-taxonomy/`). This does **not** use the
-  committed `concepts.ttl`.
-  It fetches the *complete* vocabulary live from the hub, normalises it, and builds a static
-  [SkoHub Vocabs](https://github.com/skohub-io/skohub-vocabs) site. See "Public site pipeline".
-- **Internal preview** (the `.devcontainer/` Codespace). This *does* use the committed
+  `https://fair2adapt.github.io/climate-connectivity-taxonomy/`). It builds from the **committed
+  `concepts.ttl`** (no live hub fetch at deploy time), normalises it, and builds a static
+  [SkoHub Vocabs](https://github.com/skohub-io/skohub-vocabs) site. The data is refreshed
+  separately by `refresh-vocab.yml` (see "Public site pipeline").
+- **Internal preview** (the `.devcontainer/` Codespace). This *also* uses the committed
   `concepts.ttl` snapshot and serves it with Skosmos for editing/review.
 
-## Public site pipeline (`scripts/` + `.github/workflows/pages.yml`)
+## Public site pipeline (`scripts/` + `.github/workflows/`)
 
-The published site is built by, in order:
+Data **refresh** is decoupled from site **deploy** (so a flaky hub can never publish a truncated
+vocabulary). Two workflows:
 
-1. **`scripts/fetch_vocab.py OUTPUT.ttl`** — crawls the hub starting from the scheme and follows
-   `hasTopConcept`/`broader`/`narrower`/`related` until it has fetched **every** concept (~1326),
-   not just the top concepts. This is the fix for the missing hierarchy: the plain export only
-   contains top concepts, so all child concepts (and the tree) are otherwise lost.
-2. **`scripts/prepare_vocab.py IN.ttl OUT.ttl`** — idempotent normaliser for SkoHub:
+- **`refresh-vocab.yml`** (scheduled weekly + manual `workflow_dispatch`) runs `fetch_vocab.py`
+  and commits `concepts.ttl` **only when the fetch is complete**. That commit then triggers
+  `pages.yml`.
+- **`pages.yml`** (the deploy) builds from the committed `concepts.ttl` — **no live hub fetch** —
+  on any push that changes `concepts.ttl`/`config.yaml`/`scripts/**`/the workflow, or manually.
+
+The deploy builds the site by, in order:
+
+0. **`scripts/fetch_vocab.py OUTPUT.ttl`** — runs in `refresh-vocab.yml`, *not* at deploy time.
+   Crawls the hub from the scheme following `hasTopConcept`/`broader`/`narrower`/`related` until it
+   has fetched **every** concept (~1441), not just the top concepts (the plain export only has top
+   concepts, so the tree is otherwise lost). The hub is intermittently flaky, so it **retries** and
+   **aborts non-zero** if too many fetches fail or the result is suspiciously small
+   (`MIN_CONCEPTS`/`FAIL_RATE`/`ABORT_AFTER`) — it never writes a truncated file.
+1. **`scripts/prepare_vocab.py concepts.ttl OUT.ttl`** — idempotent normaliser for SkoHub:
    - adds `dct:license` to the scheme if absent (value = `DEFAULT_LICENSE`, currently CC BY 4.0 —
      SkoHub's build *requires* a licence on the scheme);
    - makes `broader`/`narrower` symmetric and sets `topConceptOf` so that a concept is a top
@@ -36,22 +47,26 @@ The published site is built by, in order:
      flat);
    - de-duplicates same-language values for single-valued-per-language predicates
      (`prefLabel`/`definition`/`example`/`dct:title`/`dct:description`) so SkoHub doesn't drop them.
-3. SkoHub builds the site via the **`skohub/skohub-vocabs-docker:latest`** image (Node 18; the
+2. SkoHub builds the site via the **`skohub/skohub-vocabs-docker:latest`** image (Node 18; the
    local `npm` build fails on Node ≥ 20 because of Gatsby's bundled `lmdb`/`msgpackr`). The image
    is `linux/amd64`-only — fine on GitHub runners; add `--platform linux/amd64` to run it on Apple
    Silicon. `BASEURL` (derived from the repo name, e.g. `/climate-connectivity-taxonomy`) sets the
    Pages path prefix. `config.yaml` holds the SkoHub config (UI title = "Climate Connectivity
-   Taxonomy"); `prepare_vocab.py` also rewrites the scheme title if it still says "MAIA".
+   Taxonomy"); `prepare_vocab.py` also rewrites the scheme title if it still says "MAIA". The
+   container runs as **root**, so the next step `chown`s `public/` back to the runner.
+3. **`scripts/sort_tree.py public`** and **`scripts/fix_tree_indent.py public`** post-process the
+   built site, because SkoHub renders the tree in raw data order and indents parent rows ~25px past
+   their leaf siblings (the expand toggle is an in-row flex element). `sort_tree.py` sorts every
+   `hasTopConcept`/`narrower` array by prefLabel; `fix_tree_indent.py` injects CSS aligning leaf
+   rows with their siblings. The tree is fetched client-side from the scheme's `index.json` (see
+   skohub `App.jsx`), so sorting that built file sorts the rendered tree.
 
-Refresh the site after the taxonomy changes: re-run the workflow (Actions → Run workflow) or wait
-for the weekly cron. It always pulls the live vocabulary.
-
-After fetching, the workflow **commits the fetched complete vocabulary back to `concepts.ttl`**
-(`[skip ci]`, so it does not re-trigger — `concepts.ttl` is not in the trigger paths). So
-`concepts.ttl` is a static, versioned record of exactly what was last published, and it also feeds
-the **internal Skosmos preview** below (which therefore now gets the complete vocabulary). This
-needs `permissions: contents: write` on the workflow; if branch protection blocks the bot push,
-the snapshot commit step will fail (the site still deploys).
+Refresh the **data** from the hub: run `refresh-vocab.yml` (Actions → Run workflow) or wait for the
+weekly cron; it commits a fresh `concepts.ttl` only if the fetch is complete, which triggers a
+deploy. Rebuild the **site** from existing data: run `pages.yml` manually (no hub fetch). So
+`concepts.ttl` is a static, versioned record of the last *complete* published vocabulary, and it
+feeds both the public site and the **internal Skosmos preview**. `refresh-vocab.yml` needs
+`permissions: contents: write` to push the snapshot.
 
 ## The two moving parts
 
