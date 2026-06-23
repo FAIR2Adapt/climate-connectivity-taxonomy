@@ -82,6 +82,12 @@ jobs:
             -v "$PWD/config.yaml:/app/config.yaml" \
             skohub/skohub-vocabs-docker:latest
 
+      - name: Reclaim ownership of the built site
+        # The SkoHub container runs as root, so it writes public/ as root. The
+        # post-build steps below run as the non-root runner and can't overwrite
+        # those files (PermissionError) — hand ownership back to the runner first.
+        run: sudo chown -R "$(id -u):$(id -g)" public
+
       - name: Sort the navigation tree alphabetically
         # SkoHub renders the nav tree in the JSON's array order, with no sorting of
         # its own, so the ~1000 top concepts and their children come out unordered
