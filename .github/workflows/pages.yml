@@ -82,6 +82,19 @@ jobs:
             -v "$PWD/config.yaml:/app/config.yaml" \
             skohub/skohub-vocabs-docker:latest
 
+      - name: Sort the navigation tree alphabetically
+        # SkoHub renders the nav tree in the JSON's array order, with no sorting of
+        # its own, so the ~1000 top concepts and their children come out unordered
+        # and structured branches are hard to find by browsing. Sort every
+        # hasTopConcept/narrower array in the built output by prefLabel.
+        run: python scripts/sort_tree.py public
+
+      - name: Fix the navigation tree indentation
+        # SkoHub indents parent rows ~25px past their leaf siblings (the expand
+        # toggle is an in-row flex child), so an expanded parent looks nested under
+        # the leaf above it. Inject CSS that aligns leaf rows with their siblings.
+        run: python scripts/fix_tree_indent.py public
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public
