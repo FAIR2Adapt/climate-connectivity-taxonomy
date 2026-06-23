@@ -1,27 +1,26 @@
 name: Build and deploy Climate Connectivity Taxonomy to GitHub Pages
 
-# Builds a static SkoHub Vocabs site from the raw concepts.ttl export and
-# publishes it to GitHub Pages. The raw export stays untouched in the repo;
-# scripts/prepare_vocab.py normalises it (licence, hierarchy, de-duplication)
-# at build time, so dropping in a fresh export and committing is enough to
-# refresh the published site.
+# Builds a static SkoHub Vocabs site from the committed concepts.ttl and publishes
+# it to GitHub Pages. This workflow does NOT touch the connectivity-hub — it builds
+# only from the versioned concepts.ttl in the repo, so deploys are fast and never
+# degraded by hub flakiness. The data is refreshed separately by refresh-vocab.yml,
+# which fetches from the hub and commits a fresh concepts.ttl (only when complete);
+# that commit then triggers this workflow.
 
 on:
-  # rebuild when the pipeline itself changes
+  # rebuild when the data or the pipeline changes
   push:
     branches: [main]
     paths:
+      - concepts.ttl
       - config.yaml
       - scripts/**
       - .github/workflows/pages.yml
-  # let the maintainer trigger a refresh from the live hub by hand
+  # let the maintainer rebuild from the committed data by hand
   workflow_dispatch:
-  # and refresh automatically once a week (Monday 04:00 UTC)
-  schedule:
-    - cron: "0 4 * * 1"
 
 permissions:
-  contents: write   # to commit the fetched concepts.ttl snapshot back to the repo
+  contents: read
   pages: write
   id-token: write
 
@@ -43,31 +42,11 @@ jobs:
       - name: Install rdflib
         run: pip install rdflib
 
-      - name: Fetch the complete vocabulary from the connectivity-hub
-        # Pulls the full tree (top concepts AND their children) by crawling the
-        # hierarchy links, so the published site always matches the live hub.
-        run: python scripts/fetch_vocab.py concepts.fetched.ttl
-
-      - name: Save the fetched vocabulary as concepts.ttl (record of what was deployed)
-        # Commit the exact data this run published, so the repo always holds a
-        # static, versioned snapshot of the live taxonomy. concepts.ttl is not in
-        # this workflow's trigger paths, so this commit does not start a new run.
-        run: |
-          cp concepts.fetched.ttl concepts.ttl
-          if git diff --quiet -- concepts.ttl; then
-            echo "concepts.ttl unchanged — nothing to commit"
-          else
-            git config user.name  "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add concepts.ttl
-            git commit -m "Update concepts.ttl snapshot from connectivity-hub [skip ci]"
-            git push
-          fi
-
       - name: Normalise the vocabulary (licence + hierarchy + de-dup)
+        # Build from the committed concepts.ttl — no live fetch from the hub.
         run: |
           mkdir -p data
-          python scripts/prepare_vocab.py concepts.fetched.ttl data/concepts.ttl
+          python scripts/prepare_vocab.py concepts.ttl data/concepts.ttl
 
       - name: Build the SkoHub site
         run: |
