@@ -27,14 +27,32 @@ LINK_PREDICATES = [
 ]
 MAX_CONCEPTS = 5000  # safety cap
 
+# Completeness guards. The hub is intermittently flaky; a fetch that quietly
+# drops concepts must NOT be deployed/committed (it would shrink the published
+# vocabulary). Retry each request, then refuse to write the file if too many
+# requests still failed or the result is suspiciously small.
+RETRIES = 4              # attempts per URL before giving up
+BACKOFF = 1.5           # seconds, multiplied by attempt number
+ABORT_AFTER = 50        # bail out early once this many URLs have failed for good
+MIN_CONCEPTS = 1000     # floor below which the vocabulary is assumed truncated
+FAIL_RATE = 0.01        # tolerated fraction of failed fetches (≈1%)
+
 
 def fetch(url: str) -> Graph:
-    req = urllib.request.Request(url, headers=TURTLE)
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        data = resp.read()
-    g = Graph()
-    g.parse(data=data, format="turtle")
-    return g
+    last_exc = None
+    for attempt in range(RETRIES):
+        try:
+            req = urllib.request.Request(url, headers=TURTLE)
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = resp.read()
+            g = Graph()
+            g.parse(data=data, format="turtle")
+            return g
+        except Exception as exc:  # transient hub error/slowness — retry
+            last_exc = exc
+            if attempt < RETRIES - 1:
+                time.sleep(BACKOFF * (attempt + 1))
+    raise last_exc
 
 
 def main() -> None:
@@ -57,6 +75,7 @@ def main() -> None:
                 frontier.add(str(o))
 
     fetched = 0
+    failed: list = []
     while frontier and fetched < MAX_CONCEPTS:
         url = frontier.pop()
         if url in seen:
@@ -64,8 +83,13 @@ def main() -> None:
         seen.add(url)
         try:
             g = fetch(url)
-        except Exception as exc:  # keep going; report at the end
+        except Exception as exc:  # gave up after retries; record it
+            failed.append(url)
             print(f"  WARN could not fetch {url}: {exc}", file=sys.stderr)
+            if len(failed) > ABORT_AFTER:
+                sys.exit(f"ERROR: {len(failed)} fetches failed after retries — "
+                         f"the connectivity-hub is unhealthy. Aborting before "
+                         f"writing a truncated vocabulary; re-run when it recovers.")
             continue
         merged += g
         fetched += 1
@@ -78,11 +102,23 @@ def main() -> None:
             print(f"  fetched {fetched} concepts, {len(frontier)} queued…")
         time.sleep(0.05)  # be gentle on the server
 
+    # Completeness guards — refuse to write a truncated vocabulary, so the build
+    # fails instead of deploying/committing fewer concepts than the hub holds.
+    attempted = fetched + len(failed)
+    tolerated = max(5, int(attempted * FAIL_RATE))
+    if len(failed) > tolerated:
+        sys.exit(f"ERROR: {len(failed)}/{attempted} concept fetches failed "
+                 f"(tolerated {tolerated}). The hub was unhealthy; refusing to "
+                 f"write an incomplete vocabulary.")
+    if fetched < MIN_CONCEPTS:
+        sys.exit(f"ERROR: only fetched {fetched} concepts (< {MIN_CONCEPTS}). "
+                 f"Result looks truncated; refusing to write it.")
+
     merged.serialize(destination=out, format="turtle")
     n_concepts = len(set(merged.subjects(None, None)) &
                      set(merged.subjects(SKOS.prefLabel, None)))
-    print(f"fetched {fetched} concepts; wrote {len(merged)} triples "
-          f"({n_concepts} labelled subjects) to {out}")
+    print(f"fetched {fetched} concepts ({len(failed)} failed); wrote {len(merged)} "
+          f"triples ({n_concepts} labelled subjects) to {out}")
 
 
 if __name__ == "__main__":

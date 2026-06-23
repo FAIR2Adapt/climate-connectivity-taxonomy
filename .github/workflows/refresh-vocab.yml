@@ -1,0 +1,57 @@
+name: Refresh concepts.ttl from the connectivity-hub
+
+# Fetches the *complete* vocabulary from the connectivity-hub and commits it to
+# concepts.ttl — but only when the fetch is complete (scripts/fetch_vocab.py aborts
+# on a flaky/partial fetch rather than writing a truncated file). This is decoupled
+# from the site build (pages.yml): the build only ever uses the committed
+# concepts.ttl, so a flaky hub can fail a refresh without ever degrading the live
+# site. A successful refresh commits concepts.ttl, which triggers pages.yml.
+
+on:
+  # weekly refresh (Monday 04:00 UTC)
+  schedule:
+    - cron: "0 4 * * 1"
+  # and on demand
+  workflow_dispatch:
+
+permissions:
+  contents: write   # to commit the refreshed concepts.ttl
+
+# Don't overlap refreshes.
+concurrency:
+  group: refresh-vocab
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install rdflib
+        run: pip install rdflib
+
+      - name: Fetch the complete vocabulary from the connectivity-hub
+        # Crawls the full tree (top concepts AND their children). Retries transient
+        # errors and exits non-zero if too many fetches fail or the result looks
+        # truncated, so we never commit an incomplete vocabulary.
+        run: python scripts/fetch_vocab.py concepts.fetched.ttl
+
+      - name: Commit concepts.ttl if it changed
+        # A real change here is a complete, fresh snapshot. No [skip ci]: the commit
+        # is meant to trigger pages.yml (concepts.ttl is in its trigger paths).
+        run: |
+          mv concepts.fetched.ttl concepts.ttl
+          if git diff --quiet -- concepts.ttl; then
+            echo "concepts.ttl unchanged — nothing to commit"
+          else
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add concepts.ttl
+            git commit -m "Refresh concepts.ttl from connectivity-hub"
+            git push
+          fi
