@@ -54,12 +54,21 @@ jobs:
           # with that path prefix (SkoHub reads it from BASEURL).
           echo "BASEURL=/${GITHUB_REPOSITORY#*/}" > .env
           mkdir -p public && chmod 777 public
+          # The image builds the site with Gatsby at run time (CMD `npm run
+          # container-build`, source under /app). We override the entrypoint to
+          # first apply scripts/patch_search_tree.sh — which fixes SkoHub's search
+          # so a matched parent concept shows its subtree — and then run that same
+          # build. The patch hard-fails if the upstream source moved, so a broken
+          # patch stops the deploy instead of silently shipping the old behaviour.
           docker run --rm \
+            --entrypoint /bin/sh \
             -v "$PWD/public:/app/public" \
             -v "$PWD/data:/app/data" \
             -v "$PWD/.env:/app/.env" \
             -v "$PWD/config.yaml:/app/config.yaml" \
-            skohub/skohub-vocabs-docker:latest
+            -v "$PWD/scripts/patch_search_tree.sh:/tmp/patch_search_tree.sh:ro" \
+            skohub/skohub-vocabs-docker:latest \
+            -c "sh /tmp/patch_search_tree.sh && npm run container-build"
 
       - name: Reclaim ownership of the built site
         # The SkoHub container runs as root, so it writes public/ as root. The
