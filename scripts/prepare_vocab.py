@@ -51,15 +51,30 @@ OLD_TITLE_MARKER = "MAIA"
 NEW_TITLE = "Climate Connectivity Taxonomy"
 
 # Predicates that SkoHub treats as one value per language (a LanguageMap). If the
-# export carries several values in the same language, we keep the longest one so
-# the field still renders instead of being dropped as a type conflict.
-SINGLE_VALUED_PER_LANG = [
-    SKOS.prefLabel,
+# export carries several values in the same language, we must collapse them to a
+# single value or SkoHub drops the whole field as a type conflict. There are two
+# ways to collapse, depending on what the predicate means:
+#
+#   MERGE   — content fields where every value is real text a reader should see
+#             (e.g. a concept with an IPCC and a UNDRR-HIPS definition). We join
+#             the same-language values into one literal so none is lost.
+#   KEEP    — identity/label fields that are meant to hold a single value per
+#             language (a concept has one prefLabel); if the export carries
+#             several we keep the longest and drop the rest.
+MERGE_PER_LANG = [
     SKOS.definition,
     SKOS.example,
-    DCTERMS.title,
     DCTERMS.description,
 ]
+KEEP_LONGEST_PER_LANG = [
+    SKOS.prefLabel,
+    DCTERMS.title,
+]
+
+# Separator inserted between merged same-language values. The hub exports these
+# fields as HTML (definitions already contain <br /> / <p> tags), so a paragraph
+# break keeps the merged values visually distinct on the built page.
+MERGE_SEPARATOR = "<br /><br />"
 
 
 def rename_scheme(g: Graph) -> int:
@@ -150,23 +165,48 @@ def tag_untagged_text(g: Graph) -> int:
     return tagged
 
 
+def _collapse(g: Graph, predicate, merge: bool) -> int:
+    """Collapse several same-language values on `predicate` to one per language.
+
+    If `merge`, the values are concatenated into a single literal (nothing is
+    lost); otherwise the longest is kept and the rest dropped. The graph is a
+    set with no value order, so values are ordered deterministically — longest
+    first, then lexically — so the output is stable and idempotent.
+    """
+    changed = 0
+    for subject in set(g.subjects(predicate, None)):
+        by_lang: dict[str, list] = {}
+        for obj in g.objects(subject, predicate):
+            if isinstance(obj, Literal) and obj.language:
+                by_lang.setdefault(obj.language, []).append(obj)
+        for lang, values in by_lang.items():
+            if len(values) <= 1:
+                continue
+            ordered = sorted(values, key=lambda lit: (-len(str(lit)), str(lit)))
+            for obj in values:
+                g.remove((subject, predicate, obj))
+            if merge:
+                merged = MERGE_SEPARATOR.join(str(lit) for lit in ordered)
+                g.add((subject, predicate, Literal(merged, lang=lang)))
+                changed += len(values) - 1
+            else:
+                g.add((subject, predicate, ordered[0]))
+                changed += len(values) - 1
+    return changed
+
+
 def dedupe_language_maps(g: Graph) -> int:
-    """For single-valued-per-language predicates, keep one value per language."""
-    removed = 0
-    for predicate in SINGLE_VALUED_PER_LANG:
-        for subject in set(g.subjects(predicate, None)):
-            by_lang: dict[str, list] = {}
-            for obj in g.objects(subject, predicate):
-                if isinstance(obj, Literal) and obj.language:
-                    by_lang.setdefault(obj.language, []).append(obj)
-            for values in by_lang.values():
-                if len(values) > 1:
-                    keep = max(values, key=lambda lit: len(str(lit)))
-                    for obj in values:
-                        if obj is not keep:
-                            g.remove((subject, predicate, obj))
-                            removed += 1
-    return removed
+    """Collapse multi-valued LanguageMap predicates to one value per language.
+
+    Content predicates (definitions, examples) merge so no text is lost;
+    identity predicates (prefLabel, title) keep the longest value.
+    """
+    changed = 0
+    for predicate in MERGE_PER_LANG:
+        changed += _collapse(g, predicate, merge=True)
+    for predicate in KEEP_LONGEST_PER_LANG:
+        changed += _collapse(g, predicate, merge=False)
+    return changed
 
 
 def main() -> None:
