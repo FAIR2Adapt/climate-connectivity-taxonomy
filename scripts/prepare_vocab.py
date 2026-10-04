@@ -22,6 +22,14 @@ from rdflib.namespace import DCTERMS, RDF, SKOS, XSD
 # third CLI arg) if the official licence differs.
 DEFAULT_LICENSE = URIRef("https://creativecommons.org/licenses/by/4.0/")
 
+# Document describing how the taxonomy was built, linked from the concept scheme
+# with dct:references so the link travels with the data (the site footer links to
+# it too — keep in sync with config.yaml). Currently a Google Doc; replace with a
+# DOI once the methodology is deposited on Zenodo.
+METHODOLOGY_URL = URIRef(
+    "https://docs.google.com/document/d/1uPh00X7Et_E4Wsp4tqeIurVzxPW4gsuEXY136ghXTzc/view"
+)
+
 # Language assumed for literals that the hub exports without a language tag.
 # SkoHub renders these fields through a per-language LanguageMap (i18n), so an
 # untagged literal never matches the UI language ("en") and is silently dropped
@@ -81,6 +89,16 @@ def add_license(g: Graph) -> int:
     for scheme in g.subjects(RDF.type, SKOS.ConceptScheme):
         if (scheme, DCTERMS.license, None) not in g:
             g.add((scheme, DCTERMS.license, DEFAULT_LICENSE))
+            added += 1
+    return added
+
+
+def add_methodology(g: Graph) -> int:
+    """Link every concept scheme to the methodology document if not yet linked."""
+    added = 0
+    for scheme in g.subjects(RDF.type, SKOS.ConceptScheme):
+        if (scheme, DCTERMS.references, METHODOLOGY_URL) not in g:
+            g.add((scheme, DCTERMS.references, METHODOLOGY_URL))
             added += 1
     return added
 
@@ -180,6 +198,7 @@ def main() -> None:
 
     renamed = rename_scheme(g)
     licenses = add_license(g)
+    methodology = add_methodology(g)
     demoted, promoted = normalise_hierarchy(g)
     tagged = tag_untagged_text(g)
     deduped = dedupe_language_maps(g)
@@ -189,6 +208,7 @@ def main() -> None:
     print(f"parsed {before} triples from {src}")
     print(f"  renamed {renamed} scheme title(s) to '{NEW_TITLE}'")
     print(f"  licence added to {licenses} scheme(s)")
+    print(f"  methodology link added to {methodology} scheme(s)")
     print(f"  hierarchy: demoted {demoted} child concept(s) from top level, "
           f"promoted {promoted} root(s)")
     print(f"  tagged {tagged} untagged literal(s) as '{DEFAULT_LANG}'")
