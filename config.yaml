@@ -46,15 +46,23 @@ ui:
         url: "https://docs.google.com/document/d/1uPh00X7Et_E4Wsp4tqeIurVzxPW4gsuEXY136ghXTzc/view"
         target: "_blank"
         rel: "noopener noreferrer"
-      - title: "Impressum"
-        url: "https://www.hbz-nrw.de/impressum"
+      # Must match DEFAULT_LICENSE in scripts/prepare_vocab.py.
+      - title: "Licence: CC BY 4.0"
+        url: "https://creativecommons.org/licenses/by/4.0/"
         target: "_blank"
         rel: "noopener noreferrer"
-      - title: "Datenschutz"
-        url: "https://www.hbz-nrw.de/datenschutz"
+      # Upstream source of the vocabulary.
+      - title: "Connectivity Hub"
+        url: "https://connectivity-hub.weadapt.org/"
         target: "_blank"
         rel: "noopener noreferrer"
-      - title: "© SkoHub"
+      - title: "Source on GitHub"
+        url: "https://github.com/FAIR2Adapt/climate-connectivity-taxonomy"
+        target: "_blank"
+        rel: "noopener noreferrer"
+      # Tool credit (replaces SkoHub's default "© SkoHub" and hbz Impressum /
+      # Datenschutz links, which describe hbz, not this project).
+      - title: "Built with SkoHub"
         url: "https://skohub.io"
         target: "_blank"
         rel: "noopener noreferrer"
