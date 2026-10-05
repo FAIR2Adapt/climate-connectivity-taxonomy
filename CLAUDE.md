@@ -45,8 +45,11 @@ The deploy builds the site by, in order:
    - makes `broader`/`narrower` symmetric and sets `topConceptOf` so that a concept is a top
      concept **iff** it has no `broader` (otherwise every concept is a top concept and the tree is
      flat);
-   - de-duplicates same-language values for single-valued-per-language predicates
-     (`prefLabel`/`definition`/`example`/`dct:title`/`dct:description`) so SkoHub doesn't drop them.
+   - collapses same-language values on single-valued-per-language predicates (SkoHub keeps one
+     value per language, so extras would otherwise drop the whole field): content predicates
+     (`definition`/`example`/`dct:description`) are **merged** into one literal joined by
+     `<br /><br />` so nothing is lost (e.g. a concept's IPCC *and* UNDRR-HIPS definition both
+     show); identity predicates (`prefLabel`/`dct:title`) keep the longest and drop the rest.
 2. SkoHub builds the site via the **`skohub/skohub-vocabs-docker:latest`** image (Node 18; the
    local `npm` build fails on Node ≥ 20 because of Gatsby's bundled `lmdb`/`msgpackr`). The image
    is `linux/amd64`-only — fine on GitHub runners; add `--platform linux/amd64` to run it on Apple
