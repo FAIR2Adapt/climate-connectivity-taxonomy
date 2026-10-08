@@ -1,6 +1,7 @@
 #!/bin/sh
 # Export the methodology Google Doc and publish it as part of the site:
 #   OUTDIR/index.html        the methodology as a web page, styled like the site
+#   OUTDIR/media/            its figures, at full resolution
 #   OUTDIR/methodology.pdf   the same content as a PDF download
 #
 # WHY. The methodology is written in a Google Doc owned by the connectivity-hub
@@ -10,10 +11,15 @@
 # site build (pages.yml) re-exports the doc — whether or not it changed — and the
 # site links to its own copy at /methodology/.
 #
-# CONSISTENCY. Google produces the Markdown and the PDF in two separate downloads,
-# so an edit could land in between. We export Markdown -> PDF -> Markdown and only
-# accept the export when both Markdown copies are identical (retrying a few times),
-# so the page and the PDF always show the same content.
+# SOURCE FORMAT. The page is converted from the Word (.docx) export. Google's
+# Markdown export downsamples the figures (~600 px) and drops some altogether (the
+# cover screenshot); the .docx export keeps every figure at full resolution.
+#
+# CONSISTENCY. Google produces each format in a separate download, so an edit could
+# land in between. We export Markdown -> DOCX -> PDF -> Markdown and only accept the
+# export when both Markdown copies are identical (retrying a few times), so the page
+# and the PDF always show the same content. (The Markdown is used only for this
+# check: unlike the .docx, it has no embedded timestamps, so it is byte-stable.)
 #
 # SAFETY. Like fetch_vocab.py, this aborts non-zero rather than publish garbage: if
 # Google returns an error, a login page or a suspiciously small file, the deploy
@@ -45,7 +51,8 @@ fetch() { # fetch FORMAT DEST
 ok=''
 i=1
 while [ "$i" -le "$attempts" ]; do
-  if fetch md "$tmp/a.md" && fetch pdf "$tmp/doc.pdf" && fetch md "$tmp/b.md"; then
+  if fetch md "$tmp/a.md" && fetch docx "$tmp/doc.docx" && fetch pdf "$tmp/doc.pdf" \
+     && fetch md "$tmp/b.md"; then
     if cmp -s "$tmp/a.md" "$tmp/b.md"; then ok=1; break; fi
     echo "Methodology doc changed during export (attempt $i/$attempts); retrying." >&2
   else
@@ -71,16 +78,19 @@ if [ "$pdf_bytes" -lt "$min_pdf_bytes" ] || [ "$(head -c 4 "$tmp/doc.pdf")" != "
   exit 1
 fi
 
-# Google writes heading anchors such as {#version-1.1,-27-august-2026} and links to
-# them; pandoc drops the commas from ids, which breaks those table-of-contents links.
-# Remove commas from both the anchors and the in-page links so they still match.
-perl -pe 's/\{#([^}]*)\}/"{#" . ($1 =~ s|,||gr) . "}"/ge;
-          s/\]\(#([^)]*)\)/"](#" . ($1 =~ s|,||gr) . ")"/ge' "$tmp/a.md" > "$tmp/doc.md"
-
-# Markdown -> HTML fragment. Raw HTML in the doc is not passed through.
-pandoc -f markdown-raw_html -t html5 --wrap=none "$tmp/doc.md" -o "$tmp/body.html"
-# Let wide tables scroll inside their own box instead of widening the page.
-perl -pi -e 's/<table/<div class="table-wrap"><table/g; s|</table>|</table></div>|g' "$tmp/body.html"
+# DOCX -> HTML fragment, figures extracted to OUTDIR/media/ (pandoc names them
+# media/imageN.*, relative to the working directory, so run it from OUTDIR).
+rm -rf "$out/media"
+(cd "$out" && pandoc -f docx -t html5 --wrap=none --extract-media=. "$tmp/doc.docx" -o "$tmp/body.html")
+if ! grep -q '<img' "$tmp/body.html"; then
+  echo "EXPORT ERROR: no figures found in the converted page." >&2
+  exit 1
+fi
+# - drop the fixed sizes pandoc copies from Word (in inches), so CSS can scale
+#   figures to the column, and link each figure to its full-size file;
+# - let wide tables scroll inside their own box instead of widening the page.
+perl -pi -e 's|<img src="([^"]*)"[^>]*/>|<a class="figure" href="$1"><img src="$1" alt="" loading="lazy"></a>|g;
+             s/<table/<div class="table-wrap"><table/g; s|</table>|</table></div>|g' "$tmp/body.html"
 
 exported=$(date -u '+%Y-%m-%d %H:%M UTC')
 cp "$tmp/doc.pdf" "$out/methodology.pdf"
@@ -132,8 +142,12 @@ main { max-width: 46rem; margin: 0 auto; padding: 32px 16px 48px; }
 .doc h3 { font-size: 1.5rem; }
 .doc h4 { font-size: 1.25rem; }
 .doc h5 { font-size: 1.05rem; }
-.doc > p:first-child { font-size: 1.6rem; font-weight: 700; line-height: 1.25; color: var(--dark); }
-.doc img { max-width: 100%; height: auto; }
+/* The doc's title is its first two paragraphs. */
+.doc > p:nth-child(-n+2) { font-size: 1.6rem; font-weight: 700; line-height: 1.25; color: var(--dark); margin: 0 0 0.3em; }
+.doc > p:nth-child(-n+2) u { text-decoration: none; }
+.doc img { display: block; max-width: 100%; height: auto; margin: 1em auto; border: 1px solid var(--light-grey); }
+.doc a.figure { display: block; }
+.figure-hint { font-size: 14px; }
 .table-wrap { overflow-x: auto; margin: 1.2em 0; }
 .doc table { border-collapse: collapse; font-size: 14px; line-height: 1.45; min-width: 36rem; }
 .doc th, .doc td { border-top: 1px solid var(--rule); padding: 8px 10px; vertical-align: top; text-align: left; }
@@ -150,7 +164,8 @@ main { max-width: 46rem; margin: 0 auto; padding: 32px 16px 48px; }
 <div class="notice">
 EOF
 printf '  <p>The methodology is maintained as a working document by the Climate Connectivity Hub team. This page is a copy, last updated from it on %s.</p>\n' "$exported"
-printf '  <div class="links"><a href="methodology.pdf">Download PDF</a><a href="%s" target="_blank" rel="noopener noreferrer">Working document (Google Doc)</a></div>\n' "$doc_url"
+printf '  <p class="figure-hint">Select a figure to open it at full size.</p>
+  <div class="links"><a href="methodology.pdf">Download PDF</a><a href="%s" target="_blank" rel="noopener noreferrer">Working document (Google Doc)</a></div>\n' "$doc_url"
 cat <<'EOF'
 </div>
 <article class="doc">
@@ -170,4 +185,4 @@ cat <<'EOF'
 EOF
 } > "$out/index.html"
 
-echo "EXPORT OK: methodology page and PDF written to $out (md ${md_bytes} B, pdf ${pdf_bytes} B, exported ${exported})."
+echo "EXPORT OK: methodology page, $(ls "$out/media" | wc -l) figure(s) and PDF written to $out (pdf ${pdf_bytes} B, exported ${exported})."
