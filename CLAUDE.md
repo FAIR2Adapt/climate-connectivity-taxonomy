@@ -60,6 +60,18 @@ The deploy builds the site by, in order:
    `hasTopConcept`/`narrower` array by prefLabel; `fix_tree_indent.py` injects CSS aligning leaf
    rows with their siblings. The tree is fetched client-side from the scheme's `index.json` (see
    skohub `App.jsx`), so sorting that built file sorts the rendered tree.
+4. **`scripts/export_methodology.sh public/methodology`** — the one live fetch at deploy time. The
+   methodology Google Doc (owned by the connectivity-hub team) is the source of truth; every build
+   re-exports it (Markdown → DOCX → PDF → Markdown, accepted only if both Markdown copies match) and
+   renders the **DOCX** to `/methodology/index.html` + `media/` with pandoc (Google's Markdown export
+   downsamples figures and drops some, so it's only used for the consistency check). Aborts non-zero on a
+   bad export, so the previous site stays online. The footer, the scheme page
+   (`patch_scheme_links.sh`) and `dct:references` (`prepare_vocab.py`) all link to `/methodology/`.
+   Doc edits reach the site at the next deploy (any push, or a manual run of `pages.yml`).
+
+Pull requests run `pages.yml` without deploying and upload the built site as a `site-preview`
+artifact (unzip into a folder named `climate-connectivity-taxonomy`, run `python3 -m http.server`
+in its parent, open `http://localhost:8000/climate-connectivity-taxonomy/`).
 
 Refresh the **data** from the hub: run `refresh-vocab.yml` (Actions → Run workflow) or wait for the
 weekly cron; it commits a fresh `concepts.ttl` only if the fetch is complete, which triggers a
