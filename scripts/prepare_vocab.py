@@ -24,7 +24,7 @@ DEFAULT_LICENSE = URIRef("https://creativecommons.org/licenses/by/4.0/")
 
 # Document describing how the taxonomy was built, linked from the concept scheme
 # with dct:references so the link travels with the data (the site footer links to
-# it too, and scripts/patch_scheme_methodology.sh shows it on the scheme page —
+# it too, and scripts/patch_scheme_links.sh shows it on the scheme page —
 # keep all three in sync). Currently a Google Doc; replace with a
 # DOI once the methodology is deposited on Zenodo.
 METHODOLOGY_URL = URIRef(

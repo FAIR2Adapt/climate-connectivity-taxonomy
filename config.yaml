@@ -42,7 +42,7 @@ ui:
     links:
       # How the taxonomy was built (requested by the connectivity-hub team). Keep in
       # sync with METHODOLOGY_URL in scripts/prepare_vocab.py and
-      # scripts/patch_scheme_methodology.sh (scheme page, below "License").
+      # scripts/patch_scheme_links.sh (scheme page, below "License").
       - title: "Methodology"
         url: "https://docs.google.com/document/d/1uPh00X7Et_E4Wsp4tqeIurVzxPW4gsuEXY136ghXTzc/view"
         target: "_blank"
@@ -52,7 +52,8 @@ ui:
         url: "https://creativecommons.org/licenses/by/4.0/"
         target: "_blank"
         rel: "noopener noreferrer"
-      # Upstream source of the vocabulary.
+      # Upstream source of the vocabulary. Also linked on the scheme page by
+      # scripts/patch_scheme_links.sh — keep in sync.
       - title: "Connectivity Hub"
         url: "https://connectivity-hub.weadapt.org/"
         target: "_blank"
