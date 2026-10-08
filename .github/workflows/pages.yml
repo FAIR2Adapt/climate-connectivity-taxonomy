@@ -6,6 +6,14 @@ name: Build and deploy Climate Connectivity Taxonomy to GitHub Pages
 # degraded by hub flakiness. The data is refreshed separately by refresh-vocab.yml,
 # which fetches from the hub and commits a fresh concepts.ttl (only when complete);
 # that commit then triggers this workflow.
+#
+# The one live fetch at build time is the methodology: the Google Doc owned by the
+# connectivity-hub team is the source of truth, and every build re-exports it to
+# /methodology/ (HTML + PDF) via scripts/export_methodology.sh. If that export
+# fails, the build fails and the previous site stays online.
+#
+# Pull requests run the build without deploying and attach the built site as a
+# downloadable "site-preview" artifact, so changes can be reviewed before merging.
 
 on:
   # rebuild when the data or the pipeline changes
@@ -16,7 +24,14 @@ on:
       - config.yaml
       - scripts/**
       - .github/workflows/pages.yml
-  # let the maintainer rebuild from the committed data by hand
+  # build (but don't deploy) pull requests, for preview
+  pull_request:
+    paths:
+      - concepts.ttl
+      - config.yaml
+      - scripts/**
+      - .github/workflows/pages.yml
+  # let the maintainer rebuild by hand (also picks up methodology doc edits)
   workflow_dispatch:
 
 permissions:
@@ -24,9 +39,10 @@ permissions:
   pages: write
   id-token: write
 
-# Allow one concurrent deployment, but let an in-progress run finish.
+# Allow one concurrent deployment, but let an in-progress run finish. PR preview
+# builds get their own group per PR so they never queue behind deployments.
 concurrency:
-  group: pages
+  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.pull_request.number) || 'pages' }}
   cancel-in-progress: false
 
 jobs:
@@ -96,12 +112,33 @@ jobs:
         # the leaf above it. Inject CSS that aligns leaf rows with their siblings.
         run: python scripts/fix_tree_indent.py public
 
+      - name: Install pandoc
+        run: sudo apt-get update -q && sudo apt-get install -y -q pandoc
+
+      - name: Export the methodology page from the Google Doc
+        # Re-exported on every build, whether or not the doc changed, so the site's
+        # HTML page and PDF always come from one consistent snapshot of the doc.
+        run: sh scripts/export_methodology.sh public/methodology
+
       - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
         with:
           path: public
 
+      - name: Upload the built site for preview (pull requests)
+        # To browse it: download "site-preview", unzip it into a folder named
+        # climate-connectivity-taxonomy, run `python3 -m http.server` in the folder
+        # *above* it, and open http://localhost:8000/climate-connectivity-taxonomy/
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-preview
+          path: public
+          retention-days: 14
+
   deploy:
     needs: build
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

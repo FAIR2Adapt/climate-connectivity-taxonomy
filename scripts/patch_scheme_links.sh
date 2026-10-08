@@ -26,8 +26,9 @@ needle='{conceptScheme.preferredNamespaceUri && ('
 marker='cct-scheme-links'
 
 # --- Link targets. Keep in sync with the footer links in config.yaml, and the ----
-# methodology URL with METHODOLOGY_URL in scripts/prepare_vocab.py.
-methodology_url='https://docs.google.com/document/d/1uPh00X7Et_E4Wsp4tqeIurVzxPW4gsuEXY136ghXTzc/view'
+# methodology URL with METHODOLOGY_URL in scripts/prepare_vocab.py. The methodology
+# page is on this site (scripts/export_methodology.sh), so it opens in the same tab.
+methodology_url='https://fair2adapt.github.io/climate-connectivity-taxonomy/methodology/'
 hub_url='https://connectivity-hub.weadapt.org/'
 # ----------------------------------------------------------------------------------
 
@@ -55,7 +56,7 @@ cat > "$block_tmp" <<'EOF'
           {/* cct-scheme-links: methodology document and upstream hub */}
           <div>
             <h3>Methodology</h3>
-            <a href="__METHODOLOGY_URL__" target="_blank" rel="noopener noreferrer">
+            <a href="__METHODOLOGY_URL__">
               __METHODOLOGY_URL__
             </a>
           </div>
