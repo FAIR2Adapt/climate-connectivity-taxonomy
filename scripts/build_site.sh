@@ -25,8 +25,7 @@ python3 scripts/prepare_vocab.py concepts.ttl data/concepts.ttl
 #   - patch_scheme_methodology.sh adds a "Methodology" section below "License" on
 #     the scheme page (terms/index.html).
 # Each patch hard-fails if the upstream source moved, so a broken patch stops the
-# build instead of silently shipping the old behaviour. The container runs as root,
-# so it finally hands public/ back to the calling user (no sudo needed on the host).
+# build instead of silently shipping the old behaviour.
 echo "BASEURL=${BASEURL}" > .env
 rm -rf public
 mkdir -p public && chmod 777 public
@@ -40,7 +39,14 @@ docker run --rm --platform linux/amd64 \
   -v "$PWD/scripts/patch_concept_hub_link.sh:/tmp/patch_concept_hub_link.sh:ro" \
   -v "$PWD/scripts/patch_scheme_methodology.sh:/tmp/patch_scheme_methodology.sh:ro" \
   skohub/skohub-vocabs-docker:latest \
-  -c "sh /tmp/patch_search_tree.sh && sh /tmp/patch_concept_hub_link.sh && sh /tmp/patch_scheme_methodology.sh && npm run container-build && chown -R $(id -u):$(id -g) /app/public"
+  -c "sh /tmp/patch_search_tree.sh && sh /tmp/patch_concept_hub_link.sh && sh /tmp/patch_scheme_methodology.sh && npm run container-build"
+
+# The build writes public/ as the image's user, which the post-processing below
+# can't overwrite. Hand it back to the calling user from a throwaway root container
+# (no sudo needed on the host).
+docker run --rm --platform linux/amd64 --user 0 --entrypoint chown \
+  -v "$PWD/public:/app/public" \
+  skohub/skohub-vocabs-docker:latest -R "$(id -u):$(id -g)" /app/public
 
 # 3. Post-process the built site: SkoHub renders the nav tree in raw data order and
 # indents parent rows past their leaf siblings.

@@ -55,8 +55,9 @@ then serve `public/`; `BASEURL` defaults to empty), which builds the site by, in
    Silicon. `BASEURL` (derived from the repo name, e.g. `/climate-connectivity-taxonomy`) sets the
    Pages path prefix. `config.yaml` holds the SkoHub config (UI title = "Climate Connectivity
    Taxonomy"); `prepare_vocab.py` also rewrites the scheme title if it still says "MAIA". The
-   container runs as **root**, so the build `chown`s `public/` back to the calling user inside the
-   container (no host `sudo`).
+   container writes `public/` as a user the runner can't overwrite, so `build_site.sh` then
+   `chown`s it back to the caller from a second, throwaway `--user 0` container (no host `sudo`;
+   a `chown` inside the build container itself fails with "Operation not permitted").
 3. **`scripts/sort_tree.py public`** and **`scripts/fix_tree_indent.py public`** post-process the
    built site, because SkoHub renders the tree in raw data order and indents parent rows ~25px past
    their leaf siblings (the expand toggle is an in-row flex element). `sort_tree.py` sorts every
