@@ -61,8 +61,8 @@ jobs:
           #     concept shows its subtree;
           #   - patch_concept_hub_link.sh adds a "View in the Connectivity Hub"
           #     link to every term page (deterministic from the concept UUID);
-          #   - patch_scheme_methodology.sh adds a "Methodology" section below
-          #     "License" on the scheme page (terms/index.html).
+          #   - patch_scheme_links.sh adds "Methodology" and "Connectivity Hub"
+          #     links below "License" on the scheme page (terms/index.html).
           # Each patch hard-fails if the upstream source moved, so a broken patch
           # stops the deploy instead of silently shipping the old behaviour.
           docker run --rm \
@@ -73,9 +73,9 @@ jobs:
             -v "$PWD/config.yaml:/app/config.yaml" \
             -v "$PWD/scripts/patch_search_tree.sh:/tmp/patch_search_tree.sh:ro" \
             -v "$PWD/scripts/patch_concept_hub_link.sh:/tmp/patch_concept_hub_link.sh:ro" \
-            -v "$PWD/scripts/patch_scheme_methodology.sh:/tmp/patch_scheme_methodology.sh:ro" \
+            -v "$PWD/scripts/patch_scheme_links.sh:/tmp/patch_scheme_links.sh:ro" \
             skohub/skohub-vocabs-docker:latest \
-            -c "sh /tmp/patch_search_tree.sh && sh /tmp/patch_concept_hub_link.sh && sh /tmp/patch_scheme_methodology.sh && npm run container-build"
+            -c "sh /tmp/patch_search_tree.sh && sh /tmp/patch_concept_hub_link.sh && sh /tmp/patch_scheme_links.sh && npm run container-build"
 
       - name: Reclaim ownership of the built site
         # The SkoHub container runs as root, so it writes public/ as root. The
