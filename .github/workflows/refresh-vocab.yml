@@ -1,11 +1,20 @@
-name: Refresh concepts.ttl from the connectivity-hub
+name: Refresh concepts.ttl and the methodology from upstream
 
 # Fetches the *complete* vocabulary from the connectivity-hub and commits it to
 # concepts.ttl — but only when the fetch is complete (scripts/fetch_vocab.py aborts
 # on a flaky/partial fetch rather than writing a truncated file). This is decoupled
 # from the site build (pages.yml): the build only ever uses the committed
 # concepts.ttl, so a flaky hub can fail a refresh without ever degrading the live
-# site. A successful refresh commits concepts.ttl, which triggers pages.yml.
+# site. A successful refresh commits concepts.ttl and then starts pages.yml.
+#
+# A second, independent job does the same for the methodology: it snapshots the
+# connectivity-hub team's Google Doc into methodology/ (scripts/fetch_methodology.sh)
+# and commits only when its content changed. Either job can fail without blocking
+# the other.
+#
+# Pushes made with GITHUB_TOKEN do not trigger other workflows, so the final job
+# starts pages.yml explicitly (workflow_dispatch is the exception to that rule)
+# when either job committed something.
 
 on:
   # weekly refresh (Monday 04:00 UTC)
@@ -15,7 +24,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   # to commit the refreshed concepts.ttl
+  contents: write   # to commit the refreshed concepts.ttl and methodology/
+  actions: write    # to start pages.yml after a commit
 
 # Don't overlap refreshes.
 concurrency:
@@ -25,6 +35,8 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    outputs:
+      committed: ${{ steps.commit.outputs.committed }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,8 +54,8 @@ jobs:
         run: python scripts/fetch_vocab.py concepts.fetched.ttl
 
       - name: Commit concepts.ttl if it changed
-        # A real change here is a complete, fresh snapshot. No [skip ci]: the commit
-        # is meant to trigger pages.yml (concepts.ttl is in its trigger paths).
+        # A real change here is a complete, fresh snapshot.
+        id: commit
         run: |
           mv concepts.fetched.ttl concepts.ttl
           if git diff --quiet -- concepts.ttl; then
@@ -53,5 +65,49 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add concepts.ttl
             git commit -m "Refresh concepts.ttl from connectivity-hub"
+            # the methodology job may have pushed in the meantime
+            git pull --rebase
             git push
+            echo "committed=true" >> "$GITHUB_OUTPUT"
           fi
+
+  methodology:
+    runs-on: ubuntu-latest
+    outputs:
+      committed: ${{ steps.commit.outputs.committed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch the methodology from its Google Doc
+        # Exits non-zero (leaving methodology/ untouched) if Google returns an error,
+        # a login page or a suspiciously small file. Only rewrites methodology/ when
+        # the content changed.
+        run: sh scripts/fetch_methodology.sh methodology
+
+      - name: Commit methodology/ if it changed
+        id: commit
+        run: |
+          if [ -z "$(git status --porcelain -- methodology)" ]; then
+            echo "methodology unchanged — nothing to commit"
+          else
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add methodology
+            git commit -m "Refresh the methodology from its Google Doc"
+            # the vocabulary job may have pushed in the meantime
+            git pull --rebase
+            git push
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    # Start the site build once, after both jobs, if either committed. always():
+    # one job failing must not stop the other's commit from being deployed.
+    needs: [refresh, methodology]
+    if: always() && (needs.refresh.outputs.committed == 'true' || needs.methodology.outputs.committed == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start pages.yml on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref main
