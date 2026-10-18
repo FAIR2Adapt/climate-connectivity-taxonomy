@@ -144,3 +144,15 @@ host `fuseki:3030`.
   file from git on a rebuild so the sed edits stay idempotent.
 - Editing `concepts.ttl` by hand is valid for small fixes, but the source of truth is the
   connectivity-hub; prefer regenerating with `generate_ttl_from_url.sh` for bulk updates.
+
+## Tests and FAIR metadata
+
+- `pytest tests` (deps: `pip install -r requirements.txt pytest`; run by `.github/workflows/tests.yml`)
+  unit-tests `prepare_vocab.py`, `sort_tree.py` and `fix_tree_indent.py`, and checks that the
+  committed `concepts.ttl` normalises into a complete vocabulary (≥ `fetch_vocab.MIN_CONCEPTS`
+  concepts, no top concept with a `broader`, an English `prefLabel` on every concept).
+- Repository metadata lives in `CITATION.cff`, `codemeta.json` and `.zenodo.json` (Zenodo uses the
+  latter for the DOI minted on each GitHub release). Keep version, authors (with ORCIDs) and
+  licences in sync across the three. Releases are `v1.1.x` = snapshots of taxonomy version 1.1.
+- FAIRness is assessed with RSFC (`pip install rsfc`; needs `somef` on `PATH` and NLTK data), the
+  checker used by the FAIR2Adapt fairification framework.

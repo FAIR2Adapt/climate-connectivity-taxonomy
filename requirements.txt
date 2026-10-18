@@ -1,0 +1,3 @@
+# Python dependencies of scripts/ (fetch, normalise and post-process the vocabulary).
+# Tests also need pytest. The site build additionally needs Docker and pandoc (see README).
+rdflib>=7.0,<8

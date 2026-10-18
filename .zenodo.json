@@ -4,9 +4,10 @@
   "description": "<p>The Climate Connectivity Taxonomy is a SKOS vocabulary connecting dispersed climate change adaptation and disaster risk knowledge. It drives the data connections in the Climate Connectivity Hub and builds on the IPCC AR6 Glossary and the UNDRR-ISC Hazard Information Profiles, extended with expert-reviewed terms from online knowledge platforms (weADAPT, Climate-ADAPT, CORDIS, PreventionWeb, the Resilience Platform). It is developed by SEI Oxford through the PLACARD, MAIA, DIRECTED and FAIR2Adapt projects.</p><p>This record archives a snapshot of the vocabulary (<code>concepts.ttl</code>, SKOS in Turtle) mirrored from the hub, together with the tooling that publishes it as a browsable website at <a href=\"https://fair2adapt.github.io/climate-connectivity-taxonomy/\">https://fair2adapt.github.io/climate-connectivity-taxonomy/</a>. The vocabulary is licensed CC BY 4.0 (&copy; SEI Oxford); the code is MIT-licensed (&copy; The Climate Connectivity Taxonomy contributors).</p>",
   "creators": [
     { "name": "SEI Oxford" },
-    { "name": "Fouilloux, Anne", "affiliation": "LifeWatch ERIC" },
-    { "name": "Filiz, Elifsu", "affiliation": "Simula Research Laboratory" }
+    { "name": "Fouilloux, Anne", "affiliation": "LifeWatch ERIC", "orcid": "0000-0002-1784-2920" },
+    { "name": "Filiz, Elifsu", "affiliation": "Simula Research Laboratory", "orcid": "0000-0003-3744-7781" }
   ],
+  "version": "1.1.0",
   "license": "cc-by-4.0",
   "keywords": [
     "SKOS",

@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use the Climate Connectivity Taxonomy, please cite the paper describing it (preferred-citation)."
 type: dataset
 title: "Climate Connectivity Taxonomy"
-version: "1.1"
-date-released: "2026-08-27"
+version: "1.1.0"
+date-released: "2026-10-18"
 abstract: >-
   A SKOS vocabulary connecting dispersed climate change adaptation and disaster
   risk knowledge, driving the data connections in the Climate Connectivity Hub.
@@ -16,9 +16,11 @@ authors:
   - given-names: Anne
     family-names: Fouilloux
     affiliation: "LifeWatch ERIC"
+    orcid: "https://orcid.org/0000-0002-1784-2920"
   - given-names: Elifsu
     family-names: Filiz
     affiliation: "Simula Research Laboratory"
+    orcid: "https://orcid.org/0000-0003-3744-7781"
 repository-code: "https://github.com/FAIR2Adapt/climate-connectivity-taxonomy"
 url: "https://fair2adapt.github.io/climate-connectivity-taxonomy/"
 license:
