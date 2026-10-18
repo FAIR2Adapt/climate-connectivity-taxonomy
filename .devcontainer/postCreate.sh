@@ -1,8 +1,19 @@
 #!/bin/bash
 set -euxo pipefail
 
+# Runs inside a GitHub Codespace (postCreateCommand) or locally from the repo root:
+#   bash .devcontainer/postCreate.sh
+# Outside a Codespace Skosmos is served at http://localhost:9090/.
+if [ -n "${CODESPACE_NAME:-}" ]; then
+  BASEHREF="https://${CODESPACE_NAME//_/-}-9090.app.github.dev/"
+  DONE_FILE=/workspaces/.postcreate_done
+else
+  BASEHREF="http://localhost:9090/"
+  DONE_FILE=
+fi
+
 # Remove ready signal
-rm -f /workspaces/.postcreate_done
+[ -n "$DONE_FILE" ] && rm -f "$DONE_FILE"
 
 # Clone the Skosmos source
 if [ ! -d "skosmos-src" ]; then
@@ -30,9 +41,7 @@ cat <<'EOF' >> skosmos-src/dockerfiles/config/config-docker-compose.ttl
   skosmos:fullAlphabeticalIndex true .
 EOF
 
-# Change the baseHref 
-BASEHREF="https://${CODESPACE_NAME//_/-}-9090.app.github.dev/"
-
+# Change the baseHref
 sed -i.bak \
   -e 's|^[[:space:]]*# *skosmos:baseHref "http://localhost/Skosmos/" ;|    skosmos:baseHref "'"${BASEHREF}"'" ;|' \
   skosmos-src/dockerfiles/config/config-docker-compose.ttl
@@ -40,7 +49,7 @@ sed -i.bak \
 
 # Sometimes Docker is not ready when we want to use it, so we want to make sure it is ready
 ensure_docker() {
-  if ! docker info >/dev/null 2>&1; then
+  if ! docker info >/dev/null 2>&1 && [ -x /usr/local/share/docker-init.sh ]; then
     echo "[INFO] Starting Docker daemon…"
     sudo /usr/local/share/docker-init.sh || true
   fi
@@ -81,4 +90,8 @@ done
 curl --retry 6 --retry-delay 2 --retry-connrefused -sSf -X PUT -H "Content-Type: text/turtle;charset=utf-8" --data-binary @concepts.ttl "http://localhost:9030/skosmos/data?graph=http://example.org/graph/dev"
 
 # Signal that post-create finished
-touch /workspaces/.postcreate_done
+if [ -n "$DONE_FILE" ]; then
+  touch "$DONE_FILE"
+else
+  echo "Skosmos: ${BASEHREF}"
+fi

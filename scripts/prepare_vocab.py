@@ -18,8 +18,9 @@ import sys
 from rdflib import Graph, Literal, URIRef
 from rdflib.namespace import DCTERMS, RDF, SKOS, XSD
 
-# Licence applied to the concept scheme when it has none. Change here (or pass a
-# third CLI arg) if the official licence differs.
+# Licence applied to the concept scheme when it has none (the hub export carries
+# none). CC BY 4.0 is agreed with the Connectivity Hub team. Change here (or pass a
+# third CLI arg) if the official licence changes.
 DEFAULT_LICENSE = URIRef("https://creativecommons.org/licenses/by/4.0/")
 
 # Document describing how the taxonomy was built, linked from the concept scheme

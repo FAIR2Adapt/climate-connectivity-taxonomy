@@ -1,0 +1,49 @@
+cff-version: 1.2.0
+message: "If you use the Climate Connectivity Taxonomy, please cite the paper describing it (preferred-citation)."
+type: dataset
+title: "Climate Connectivity Taxonomy"
+version: "1.1"
+date-released: "2026-08-27"
+abstract: >-
+  A SKOS vocabulary connecting dispersed climate change adaptation and disaster
+  risk knowledge, driving the data connections in the Climate Connectivity Hub.
+  It builds on the IPCC AR6 Glossary and the UNDRR-ISC Hazard Information
+  Profiles, extended with expert-reviewed terms from online knowledge platforms.
+  This repository mirrors it as a versioned Turtle file and publishes it as a
+  browsable website, with the tooling to build and preview it.
+authors:
+  - name: "SEI Oxford"
+  - given-names: Anne
+    family-names: Fouilloux
+    affiliation: "LifeWatch ERIC"
+  - given-names: Elifsu
+    family-names: Filiz
+    affiliation: "Simula Research Laboratory"
+repository-code: "https://github.com/FAIR2Adapt/climate-connectivity-taxonomy"
+url: "https://fair2adapt.github.io/climate-connectivity-taxonomy/"
+license:
+  - CC-BY-4.0
+  - MIT
+keywords:
+  - SKOS
+  - controlled vocabulary
+  - taxonomy
+  - climate adaptation
+  - disaster risk reduction
+  - weADAPT
+  - FAIR2Adapt
+preferred-citation:
+  type: article
+  title: "Scaling knowledge interoperability for accelerated climate action through the Climate Connectivity Hub and Taxonomy"
+  authors:
+    - given-names: Sukaina
+      family-names: Bharwani
+    - given-names: Kate
+      family-names: Williamson
+    - given-names: Adam
+      family-names: Wangrat
+  journal: "Climatic Change"
+  volume: 179
+  start: "48"
+  year: 2026
+  doi: "10.1007/s10584-026-04139-y"
