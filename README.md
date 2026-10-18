@@ -1,12 +1,18 @@
 # Climate Connectivity Taxonomy
 
+[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![Tests](https://github.com/FAIR2Adapt/climate-connectivity-taxonomy/actions/workflows/tests.yml/badge.svg)](https://github.com/FAIR2Adapt/climate-connectivity-taxonomy/actions/workflows/tests.yml)
+[![License: CC BY 4.0 (taxonomy) / MIT (code)](https://img.shields.io/badge/license-CC%20BY%204.0%20%2F%20MIT-blue)](#license)
+
 **A SKOS vocabulary connecting dispersed climate change adaptation and disaster risk knowledge.**
 The Climate Connectivity Taxonomy (CC Taxonomy, formerly "MAIA taxonomy") drives the data
 connections in the [Climate Connectivity Hub](https://connectivity-hub.weadapt.org/). It is developed
 by SEI Oxford through the PLACARD, MAIA, DIRECTED and FAIR2Adapt projects. It builds on the IPCC AR6
 Glossary and the UNDRR-ISC Hazard Information Profiles, extended with expert-reviewed terms from
 platforms such as weADAPT, Climate-ADAPT, CORDIS, PreventionWeb and the Resilience Platform.
-The current version is **1.1** (27 August 2026), with ~1,400 concepts.
+The current version is **1.1** (27 August 2026), with ~1,400 concepts. Releases of this
+repository follow [semantic versioning](https://semver.org/): `v1.1.x` are snapshots of
+taxonomy version 1.1.
 
 This repository mirrors the taxonomy from the hub as a versioned Turtle file and holds the tooling
 that publishes it as a searchable website and previews it, so that the vocabulary is findable,
@@ -28,9 +34,10 @@ data managers and web developers integrating climate vocabularies, and tool deve
 3. [Configuration](#configuration)
 4. [Usage](#usage)
 5. [Contributing](#contributing)
-6. [License](#license)
-7. [Acknowledgements](#acknowledgements)
-8. [Citation](#citation)
+6. [Support](#support)
+7. [License](#license)
+8. [Acknowledgements](#acknowledgements)
+9. [Citation](#citation)
 
 ---
 
@@ -42,8 +49,9 @@ You need nothing to browse or download the taxonomy. To build the site or run th
 - [Git](https://git-scm.com/)
 - [Docker](https://docs.docker.com/get-docker/) with Docker Compose. The SkoHub image is
   `linux/amd64`-only; on Apple Silicon it runs under emulation (slower, but it works).
-- Python 3 (the CI uses 3.12) with [rdflib](https://rdflib.readthedocs.io/): `pip install rdflib`
-- [pandoc](https://pandoc.org/installing.html), for the methodology page of the site (option A only)
+- Python 3 (the CI uses 3.12) with [rdflib](https://rdflib.readthedocs.io/) 7.x, listed in
+  [`requirements.txt`](requirements.txt)
+- [pandoc](https://pandoc.org/installing.html) ≥ 3.1, for the methodology page of the site (option A only)
 
 Alternatively, a GitHub account is enough to run the Skosmos preview in a
 [GitHub Codespace](#option-c-skosmos-preview-in-a-github-codespace), with nothing installed locally.
@@ -59,8 +67,8 @@ git clone https://github.com/FAIR2Adapt/climate-connectivity-taxonomy.git
 # Enter directory
 cd climate-connectivity-taxonomy
 
-# Install the Python dependency
-pip install rdflib
+# Install the Python dependencies
+pip install -r requirements.txt
 ```
 
 Then choose how you want to look at the vocabulary.
@@ -183,9 +191,27 @@ it feeds into versions 1.x and 2. Please read the scope in the
 first. Accepted changes reach this repository with the weekly refresh. Don't edit `concepts.ttl`
 here for content changes: the next refresh from the hub overwrites them.
 
-**To the website and tooling.** Open an issue or a pull request. Please build the site locally
-(`bash scripts/build_site.sh`) before submitting changes to `scripts/` or `config.yaml`; pull
-requests touching them are also build-tested by CI.
+**To the website and tooling.** Open an issue or a pull request. Before submitting changes to
+`scripts/` or `config.yaml`, please run the tests and build the site locally:
+
+```bash
+pip install -r requirements.txt pytest
+pytest tests                 # unit tests + checks on the committed concepts.ttl
+bash scripts/build_site.sh   # full site build (needs Docker and pandoc)
+```
+
+Pull requests are tested and build-checked by CI.
+
+---
+
+## Support
+
+- **Questions about the taxonomy** (terms, definitions, scope): contact
+  [sukaina.bharwani@sei.org](mailto:sukaina.bharwani@sei.org) at SEI Oxford.
+- **Problems with the website, the data snapshot or the tooling**: open an
+  [issue on GitHub](https://github.com/FAIR2Adapt/climate-connectivity-taxonomy/issues).
+- **Maintainer of this repository:** Anne Fouilloux (LifeWatch ERIC,
+  [ORCID 0000-0002-1784-2920](https://orcid.org/0000-0002-1784-2920)).
 
 ---
 

@@ -4,3 +4,6 @@
 data/
 public/
 .env
+# Python
+__pycache__/
+.pytest_cache/

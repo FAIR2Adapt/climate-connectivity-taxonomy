@@ -1,0 +1,88 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "@type": "SoftwareSourceCode",
+  "name": "Climate Connectivity Taxonomy",
+  "description": "A SKOS vocabulary connecting dispersed climate change adaptation and disaster risk knowledge, driving the data connections in the Climate Connectivity Hub. This repository mirrors it from the hub as a versioned Turtle file and holds the tooling that publishes it as a browsable SkoHub Vocabs website and previews it with Skosmos.",
+  "version": "1.1.0",
+  "dateCreated": "2025-08-08",
+  "datePublished": "2026-10-18",
+  "developmentStatus": "active",
+  "codeRepository": "https://github.com/FAIR2Adapt/climate-connectivity-taxonomy",
+  "issueTracker": "https://github.com/FAIR2Adapt/climate-connectivity-taxonomy/issues",
+  "continuousIntegration": "https://github.com/FAIR2Adapt/climate-connectivity-taxonomy/actions",
+  "url": "https://fair2adapt.github.io/climate-connectivity-taxonomy/",
+  "readme": "https://github.com/FAIR2Adapt/climate-connectivity-taxonomy/blob/main/README.md",
+  "buildInstructions": "https://github.com/FAIR2Adapt/climate-connectivity-taxonomy#installation",
+  "license": [
+    "https://spdx.org/licenses/CC-BY-4.0",
+    "https://spdx.org/licenses/MIT"
+  ],
+  "programmingLanguage": ["Python", "Shell"],
+  "runtimePlatform": ["Python 3", "Docker"],
+  "softwareRequirements": [
+    "rdflib>=7.0,<8",
+    "pandoc>=3.1"
+  ],
+  "keywords": [
+    "SKOS",
+    "controlled vocabulary",
+    "taxonomy",
+    "climate adaptation",
+    "disaster risk reduction",
+    "weADAPT",
+    "FAIR2Adapt"
+  ],
+  "author": [
+    {
+      "@type": "Organization",
+      "name": "SEI Oxford",
+      "@id": "https://ror.org/056x7d368"
+    },
+    {
+      "@type": "Person",
+      "@id": "https://orcid.org/0000-0002-1784-2920",
+      "givenName": "Anne",
+      "familyName": "Fouilloux",
+      "affiliation": { "@type": "Organization", "name": "LifeWatch ERIC", "@id": "https://ror.org/04c04g438" }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://orcid.org/0000-0003-3744-7781",
+      "givenName": "Elifsu",
+      "familyName": "Filiz",
+      "affiliation": { "@type": "Organization", "name": "Simula Research Laboratory", "@id": "https://ror.org/00vn06n10" }
+    }
+  ],
+  "contributor": [
+    {
+      "@type": "Person",
+      "@id": "https://orcid.org/0000-0002-1784-2920",
+      "givenName": "Anne",
+      "familyName": "Fouilloux"
+    },
+    {
+      "@type": "Person",
+      "@id": "https://orcid.org/0000-0003-3744-7781",
+      "givenName": "Elifsu",
+      "familyName": "Filiz"
+    }
+  ],
+  "maintainer": {
+    "@type": "Person",
+    "@id": "https://orcid.org/0000-0002-1784-2920",
+    "givenName": "Anne",
+    "familyName": "Fouilloux"
+  },
+  "copyrightHolder": { "@type": "Organization", "name": "SEI Oxford", "@id": "https://ror.org/056x7d368" },
+  "funding": {
+    "@type": "Grant",
+    "identifier": "101188256",
+    "name": "FAIR2Adapt",
+    "funder": { "@type": "Organization", "name": "European Commission", "@id": "https://ror.org/00k4n6c32" }
+  },
+  "referencePublication": {
+    "@type": "ScholarlyArticle",
+    "@id": "https://doi.org/10.1007/s10584-026-04139-y",
+    "name": "Scaling knowledge interoperability for accelerated climate action through the Climate Connectivity Hub and Taxonomy"
+  }
+}
