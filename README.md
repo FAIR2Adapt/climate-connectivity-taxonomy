@@ -17,7 +17,7 @@ data managers and web developers integrating climate vocabularies, and tool deve
 - **Download:** [`concepts.ttl`](concepts.ttl) (SKOS, Turtle)
 - **Paper:** Bharwani, Williamson & Wangrat (2026), [doi:10.1007/s10584-026-04139-y](https://doi.org/10.1007/s10584-026-04139-y)
 - **Concept URIs:** `http://connectivity-hub.com/terms/<uuid>` in the scheme `http://connectivity-hub.com/terms/`
-- **Methodology:** [development, methodology and next steps](https://docs.google.com/document/d/1uPh00X7Et_E4Wsp4tqeIurVzxPW4gsuEXY136ghXTzc/view)
+- **Methodology:** [development, methodology and next steps](https://fair2adapt.github.io/climate-connectivity-taxonomy/methodology/) (also as PDF)
 
 ---
 
@@ -43,6 +43,7 @@ You need nothing to browse or download the taxonomy. To build the site or run th
 - [Docker](https://docs.docker.com/get-docker/) with Docker Compose. The SkoHub image is
   `linux/amd64`-only; on Apple Silicon it runs under emulation (slower, but it works).
 - Python 3 (the CI uses 3.12) with [rdflib](https://rdflib.readthedocs.io/): `pip install rdflib`
+- [pandoc](https://pandoc.org/installing.html), for the methodology page of the site (option A only)
 
 Alternatively, a GitHub account is enough to run the Skosmos preview in a
 [GitHub Codespace](#option-c-skosmos-preview-in-a-github-codespace), with nothing installed locally.
@@ -66,7 +67,8 @@ Then choose how you want to look at the vocabulary.
 
 ### Option A: build the public site locally (SkoHub Vocabs)
 
-This builds exactly what is published on GitHub Pages, from the committed `concepts.ttl`.
+This builds exactly what is published on GitHub Pages, from the committed `concepts.ttl` and
+`methodology/`. Nothing is fetched from the hub or Google.
 
 ```bash
 # Normalise concepts.ttl, build the site with SkoHub and post-process it into public/
@@ -136,24 +138,32 @@ Connectivity Hub.
 
 ### How the public site is kept up to date
 
-Refreshing the **data** and deploying the **site** are separate steps, so a flaky hub can never
-publish a truncated vocabulary:
+Refreshing the **data** and deploying the **site** are separate steps, so a flaky hub (or Google)
+can never publish a truncated vocabulary or a broken page:
 
 1. [`refresh-vocab.yml`](.github/workflows/refresh-vocab.yml) runs every Monday, or by hand via
-   *Actions → Run workflow*. `scripts/fetch_vocab.py` crawls the hub through
-   `hasTopConcept`/`broader`/`narrower`/`related` until it has every concept, retrying failures.
-   The workflow commits `concepts.ttl` **only if the fetch is complete**.
-2. That commit triggers [`pages.yml`](.github/workflows/pages.yml), which runs
-   `scripts/build_site.sh` on the committed `concepts.ttl` and deploys the result to GitHub Pages.
-   It never contacts the hub. Run it by hand to rebuild the site without new data.
+   *Actions → Run workflow*. Two independent jobs:
+   - `scripts/fetch_vocab.py` crawls the hub through `hasTopConcept`/`broader`/`narrower`/`related`
+     until it has every concept, retrying failures. The job commits `concepts.ttl` **only if the
+     fetch is complete**.
+   - `scripts/fetch_methodology.sh` takes a copy of the methodology Google Doc (which the hub team
+     keeps editing) into `methodology/`, and commits it **only if the content changed**.
+
+   If either job committed, the workflow then starts the deploy.
+2. [`pages.yml`](.github/workflows/pages.yml) runs `scripts/build_site.sh` on the committed files
+   and deploys the result to GitHub Pages. It never contacts the hub or Google. Run it by hand to
+   rebuild the site without new data. Pull requests run the build without deploying and attach the
+   built site as a `site-preview` artifact.
 
 `build_site.sh` normalises the vocabulary for SkoHub (`prepare_vocab.py`: licence, symmetric
 `broader`/`narrower`, same-language de-duplication), builds the site with the
 `skohub/skohub-vocabs-docker` image plus small patches (`scripts/patch_*.sh`), then sorts and
-re-indents the navigation tree (`sort_tree.py`, `fix_tree_indent.py`).
+re-indents the navigation tree (`sort_tree.py`, `fix_tree_indent.py`), and renders the methodology
+page from `methodology/` with pandoc (`render_methodology.sh`).
 
 So `concepts.ttl` is always the last complete published vocabulary, and
-`git log -- concepts.ttl` shows how the taxonomy changed over time.
+`git log -- concepts.ttl` and `git log -- methodology/` show how the taxonomy and its methodology
+changed over time. Don't edit `methodology/` by hand: edit the Google Doc.
 
 To fetch the current vocabulary from the hub yourself:
 
@@ -169,7 +179,7 @@ python3 scripts/fetch_vocab.py concepts.ttl
 term, or have a different definition or a perspective from your field? Contact
 [sukaina.bharwani@sei.org](mailto:sukaina.bharwani@sei.org) to suggest a concept or give feedback;
 it feeds into versions 1.x and 2. Please read the scope in the
-[methodology document](https://docs.google.com/document/d/1uPh00X7Et_E4Wsp4tqeIurVzxPW4gsuEXY136ghXTzc/view)
+[methodology](https://fair2adapt.github.io/climate-connectivity-taxonomy/methodology/)
 first. Accepted changes reach this repository with the weekly refresh. Don't edit `concepts.ttl`
 here for content changes: the next refresh from the hub overwrites them.
 

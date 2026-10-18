@@ -5,7 +5,9 @@
 #   bash scripts/build_site.sh                 # site served from / (local preview)
 #   BASEURL=/climate-connectivity-taxonomy bash scripts/build_site.sh   # GitHub Pages
 #
-# Requires Docker and Python 3 with rdflib. No connectivity-hub fetch happens here.
+# Requires Docker, Python 3 with rdflib, and pandoc. Nothing is fetched from the
+# connectivity-hub or Google here: the site is built from the committed concepts.ttl
+# and methodology/ snapshots.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -22,8 +24,8 @@ python3 scripts/prepare_vocab.py concepts.ttl data/concepts.ttl
 #     shows its subtree;
 #   - patch_concept_hub_link.sh adds a "View in the Connectivity Hub" link to every
 #     term page (deterministic from the concept UUID);
-#   - patch_scheme_methodology.sh adds a "Methodology" section below "License" on
-#     the scheme page (terms/index.html).
+#   - patch_scheme_links.sh adds "Methodology" and "Connectivity Hub" links below
+#     "License" on the scheme page (terms/index.html).
 # Each patch hard-fails if the upstream source moved, so a broken patch stops the
 # build instead of silently shipping the old behaviour.
 echo "BASEURL=${BASEURL}" > .env
@@ -37,9 +39,9 @@ docker run --rm --platform linux/amd64 \
   -v "$PWD/config.yaml:/app/config.yaml" \
   -v "$PWD/scripts/patch_search_tree.sh:/tmp/patch_search_tree.sh:ro" \
   -v "$PWD/scripts/patch_concept_hub_link.sh:/tmp/patch_concept_hub_link.sh:ro" \
-  -v "$PWD/scripts/patch_scheme_methodology.sh:/tmp/patch_scheme_methodology.sh:ro" \
+  -v "$PWD/scripts/patch_scheme_links.sh:/tmp/patch_scheme_links.sh:ro" \
   skohub/skohub-vocabs-docker:latest \
-  -c "sh /tmp/patch_search_tree.sh && sh /tmp/patch_concept_hub_link.sh && sh /tmp/patch_scheme_methodology.sh && npm run container-build"
+  -c "sh /tmp/patch_search_tree.sh && sh /tmp/patch_concept_hub_link.sh && sh /tmp/patch_scheme_links.sh && npm run container-build"
 
 # The build writes public/ as the image's user, which the post-processing below
 # can't overwrite. Hand it back to the calling user from a throwaway root container
@@ -52,5 +54,8 @@ docker run --rm --platform linux/amd64 --user 0 --entrypoint chown \
 # indents parent rows past their leaf siblings.
 python3 scripts/sort_tree.py public
 python3 scripts/fix_tree_indent.py public
+
+# 4. Render the methodology page from the committed snapshot of the Google Doc.
+sh scripts/render_methodology.sh methodology public/methodology
 
 echo "Site built in public/ (BASEURL='${BASEURL}')."
