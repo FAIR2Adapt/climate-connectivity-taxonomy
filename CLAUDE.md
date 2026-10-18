@@ -32,7 +32,8 @@ vocabulary). Two workflows:
   live hub or Google fetch** — on any push that changes them/`config.yaml`/`scripts/**`/the
   workflow, when started by `refresh-vocab.yml`, or manually.
 
-The deploy builds the site by, in order:
+The deploy runs **`scripts/build_site.sh`** (also usable locally: `bash scripts/build_site.sh`,
+then serve `public/`; `BASEURL` defaults to empty), which builds the site by, in order:
 
 0. **`scripts/fetch_vocab.py OUTPUT.ttl`** — runs in `refresh-vocab.yml`, *not* at deploy time.
    Crawls the hub from the scheme following `hasTopConcept`/`broader`/`narrower`/`related` until it
@@ -54,7 +55,8 @@ The deploy builds the site by, in order:
    Silicon. `BASEURL` (derived from the repo name, e.g. `/climate-connectivity-taxonomy`) sets the
    Pages path prefix. `config.yaml` holds the SkoHub config (UI title = "Climate Connectivity
    Taxonomy"); `prepare_vocab.py` also rewrites the scheme title if it still says "MAIA". The
-   container runs as **root**, so the next step `chown`s `public/` back to the runner.
+   container runs as **root**, so the build `chown`s `public/` back to the calling user inside the
+   container (no host `sudo`).
 3. **`scripts/sort_tree.py public`** and **`scripts/fix_tree_indent.py public`** post-process the
    built site, because SkoHub renders the tree in raw data order and indents parent rows ~25px past
    their leaf siblings (the expand toggle is an in-row flex element). `sort_tree.py` sorts every
@@ -111,8 +113,9 @@ feeds both the public site and the **internal Skosmos preview**. `refresh-vocab.
 
 ## Preview pipeline (`.devcontainer/`)
 
-Previewing is designed to run in a **GitHub Codespace** (Docker-in-Docker), not on a local
-checkout. The flow, driven by `devcontainer.json`:
+Previewing is designed to run in a **GitHub Codespace** (Docker-in-Docker), but `postCreate.sh`
+also runs locally from the repo root: without `CODESPACE_NAME` it uses `http://localhost:9090/`
+as `baseHref` and skips the `/workspaces` ready signal. The flow, driven by `devcontainer.json`:
 
 - **`postCreate.sh`** (postCreateCommand) does the real work:
   - clones Skosmos into `skosmos-src/` (gitignored / untracked),
