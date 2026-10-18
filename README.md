@@ -1,16 +1,23 @@
 # Climate Connectivity Taxonomy
 
-**A SKOS vocabulary of climate-adaptation concepts, published as a browsable website.**
-The Climate Connectivity Taxonomy (CC Taxonomy, formerly "MAIA taxonomy") organises the ~1,400
-concepts used to describe resources in the [weADAPT Connectivity Hub](https://connectivity-hub.weadapt.org/).
+**A SKOS vocabulary connecting dispersed climate change adaptation and disaster risk knowledge.**
+The Climate Connectivity Taxonomy (CC Taxonomy, formerly "MAIA taxonomy") drives the data
+connections in the [Climate Connectivity Hub](https://connectivity-hub.weadapt.org/). It is developed
+by SEI Oxford through the PLACARD, MAIA, DIRECTED and FAIR2Adapt projects. It builds on the IPCC AR6
+Glossary and the UNDRR-ISC Hazard Information Profiles, extended with expert-reviewed terms from
+platforms such as weADAPT, Climate-ADAPT, CORDIS, PreventionWeb and the Resilience Platform.
+The current version is **1.1** (27 August 2026), with ~1,400 concepts.
+
 This repository mirrors the taxonomy from the hub as a versioned Turtle file and holds the tooling
-that publishes and previews it, so that the vocabulary is findable, citable and reusable outside
-the hub.
+that publishes it as a searchable website and previews it, so that the vocabulary is findable,
+citable and reusable outside the hub. It is meant for researchers who need consistent terminology,
+data managers and web developers integrating climate vocabularies, and tool developers.
 
 - **Browse online:** <https://fair2adapt.github.io/climate-connectivity-taxonomy/>
 - **Download:** [`concepts.ttl`](concepts.ttl) (SKOS, Turtle)
+- **Paper:** Bharwani, Williamson & Wangrat (2026), [doi:10.1007/s10584-026-04139-y](https://doi.org/10.1007/s10584-026-04139-y)
 - **Concept URIs:** `http://connectivity-hub.com/terms/<uuid>` in the scheme `http://connectivity-hub.com/terms/`
-- **Methodology:** [how the taxonomy was built](https://docs.google.com/document/d/1uPh00X7Et_E4Wsp4tqeIurVzxPW4gsuEXY136ghXTzc/view)
+- **Methodology:** [development, methodology and next steps](https://docs.google.com/document/d/1uPh00X7Et_E4Wsp4tqeIurVzxPW4gsuEXY136ghXTzc/view)
 
 ---
 
@@ -158,12 +165,17 @@ python3 scripts/fetch_vocab.py concepts.ttl
 
 ## Contributing
 
-The source of truth for the taxonomy is the **weADAPT Connectivity Hub**: add or change concepts
-there, and the weekly refresh brings them into this repository. Small fixes directly in
-`concepts.ttl` are possible, but the next refresh from the hub overwrites them.
+**To the taxonomy.** The source of truth is the Climate Connectivity Hub, curated by SEI. Can't find a
+term, or have a different definition or a perspective from your field? Contact
+[sukaina.bharwani@sei.org](mailto:sukaina.bharwani@sei.org) to suggest a concept or give feedback;
+it feeds into versions 1.x and 2. Please read the scope in the
+[methodology document](https://docs.google.com/document/d/1uPh00X7Et_E4Wsp4tqeIurVzxPW4gsuEXY136ghXTzc/view)
+first. Accepted changes reach this repository with the weekly refresh. Don't edit `concepts.ttl`
+here for content changes: the next refresh from the hub overwrites them.
 
-For the site and tooling, open an issue or a pull request. Please build the site locally
-(`bash scripts/build_site.sh`) before submitting changes to `scripts/` or `config.yaml`.
+**To the website and tooling.** Open an issue or a pull request. Please build the site locally
+(`bash scripts/build_site.sh`) before submitting changes to `scripts/` or `config.yaml`; pull
+requests touching them are also build-tested by CI.
 
 ---
 
@@ -180,7 +192,8 @@ For the site and tooling, open an issue or a pull request. Please build the site
 ## Acknowledgements
 
 This work has been funded by the European Union's Horizon Europe Framework Programme under Grant
-Agreement No. 101188256 ([FAIR2Adapt](https://github.com/FAIR2Adapt)).
+Agreement No. 101188256 ([FAIR2Adapt](https://github.com/FAIR2Adapt)). The taxonomy itself was
+developed through the PLACARD, MAIA, DIRECTED and FAIR2Adapt projects.
 
 The site is built with [SkoHub Vocabs](https://github.com/skohub-io/skohub-vocabs) and previewed
 with [Skosmos](https://github.com/NatLibFi/Skosmos).
@@ -189,16 +202,24 @@ with [Skosmos](https://github.com/NatLibFi/Skosmos).
 
 ## Citation
 
-If you use the Climate Connectivity Taxonomy, please cite it as described in
-[`CITATION.cff`](CITATION.cff) (GitHub's **Cite this repository** button), for example:
+To cite the taxonomy, please cite the paper describing it:
+
+> Bharwani, S., Williamson, K., & Wangrat, A. (2026). Scaling knowledge interoperability for
+> accelerated climate action through the Climate Connectivity Hub and Taxonomy. *Climatic Change*,
+> 179, 48. https://doi.org/10.1007/s10584-026-04139-y
 
 ```bibtex
-@misc{cc_taxonomy,
-  title        = {Climate Connectivity Taxonomy},
-  author       = {{SEI Oxford} and Fouilloux, Anne and Filiz, Elifsu},
-  year         = {2026},
-  publisher    = {GitHub},
-  howpublished = {\url{https://github.com/FAIR2Adapt/climate-connectivity-taxonomy}},
-  note         = {SKOS vocabulary. Browsable at \url{https://fair2adapt.github.io/climate-connectivity-taxonomy/}}
+@article{bharwani2026,
+  author  = {Bharwani, Sukaina and Williamson, Kate and Wangrat, Adam},
+  title   = {Scaling knowledge interoperability for accelerated climate action through the
+             Climate Connectivity Hub and Taxonomy},
+  journal = {Climatic Change},
+  volume  = {179},
+  pages   = {48},
+  year    = {2026},
+  doi     = {10.1007/s10584-026-04139-y}
 }
 ```
+
+To cite this repository (the published vocabulary snapshot and its tooling), use
+[`CITATION.cff`](CITATION.cff) (GitHub's **Cite this repository** button).
