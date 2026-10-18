@@ -169,7 +169,7 @@ For the site and tooling, open an issue or a pull request. Please build the site
 
 ## License
 
-- **Vocabulary** (`concepts.ttl` and the published site content): [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+- **Vocabulary** (`concepts.ttl` and the published site content): [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/), as agreed with the weADAPT Connectivity Hub team.
 - **Code** (`scripts/`, `.devcontainer/`, `.github/`): TODO — see [`LICENSE`](LICENSE).
 
 ---
