@@ -169,8 +169,11 @@ For the site and tooling, open an issue or a pull request. Please build the site
 
 ## License
 
-- **Vocabulary** (`concepts.ttl` and the published site content): [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/), as agreed with the weADAPT Connectivity Hub team.
-- **Code** (`scripts/`, `.devcontainer/`, `.github/`): TODO — see [`LICENSE`](LICENSE).
+- **Taxonomy** (`concepts.ttl` and the content of the published website): © SEI Oxford,
+  licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/),
+  as agreed with the weADAPT Connectivity Hub team.
+- **Code** (`scripts/`, `.github/`, `.devcontainer/`, `generate_ttl_from_url.sh`):
+  [MIT](LICENSE), © The Climate Connectivity Taxonomy contributors.
 
 ---
 
@@ -192,7 +195,7 @@ If you use the Climate Connectivity Taxonomy, please cite it as described in
 ```bibtex
 @misc{cc_taxonomy,
   title        = {Climate Connectivity Taxonomy},
-  author       = {TODO},
+  author       = {{SEI Oxford} and Fouilloux, Anne and Filiz, Elifsu},
   year         = {2026},
   publisher    = {GitHub},
   howpublished = {\url{https://github.com/FAIR2Adapt/climate-connectivity-taxonomy}},

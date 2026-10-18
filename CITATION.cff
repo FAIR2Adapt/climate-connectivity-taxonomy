@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use the Climate Connectivity Taxonomy, please cite it as below."
+type: dataset
+title: "Climate Connectivity Taxonomy"
+abstract: >-
+  A SKOS vocabulary of climate-adaptation concepts used to describe resources in
+  the weADAPT Connectivity Hub, mirrored as a versioned Turtle file and published
+  as a browsable website, with the tooling to build and preview it.
+authors:
+  - name: "SEI Oxford"
+  - given-names: Anne
+    family-names: Fouilloux
+    affiliation: "LifeWatch ERIC"
+  - given-names: Elifsu
+    family-names: Filiz
+    affiliation: "Simula Research Laboratory"
+repository-code: "https://github.com/FAIR2Adapt/climate-connectivity-taxonomy"
+url: "https://fair2adapt.github.io/climate-connectivity-taxonomy/"
+license:
+  - CC-BY-4.0
+  - MIT
+keywords:
+  - SKOS
+  - controlled vocabulary
+  - taxonomy
+  - climate adaptation
+  - weADAPT
+  - FAIR2Adapt
