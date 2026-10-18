@@ -1,5 +1,6 @@
 # Climate Connectivity Taxonomy
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23455455.svg)](https://doi.org/10.5281/zenodo.23455455)
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Tests](https://github.com/FAIR2Adapt/climate-connectivity-taxonomy/actions/workflows/tests.yml/badge.svg)](https://github.com/FAIR2Adapt/climate-connectivity-taxonomy/actions/workflows/tests.yml)
 [![License: CC BY 4.0 (taxonomy) / MIT (code)](https://img.shields.io/badge/license-CC%20BY%204.0%20%2F%20MIT-blue)](#license)
@@ -20,7 +21,8 @@ citable and reusable outside the hub. It is meant for researchers who need consi
 data managers and web developers integrating climate vocabularies, and tool developers.
 
 - **Browse online:** <https://fair2adapt.github.io/climate-connectivity-taxonomy/>
-- **Download:** [`concepts.ttl`](concepts.ttl) (SKOS, Turtle)
+- **Download:** [`concepts.ttl`](concepts.ttl) (SKOS, Turtle); archived releases on Zenodo:
+  [doi:10.5281/zenodo.23455455](https://doi.org/10.5281/zenodo.23455455)
 - **Paper:** Bharwani, Williamson & Wangrat (2026), [doi:10.1007/s10584-026-04139-y](https://doi.org/10.1007/s10584-026-04139-y)
 - **Concept URIs:** `http://connectivity-hub.com/terms/<uuid>` in the scheme `http://connectivity-hub.com/terms/`
 - **Methodology:** [development, methodology and next steps](https://fair2adapt.github.io/climate-connectivity-taxonomy/methodology/) (also as PDF)
@@ -257,5 +259,7 @@ To cite the taxonomy, please cite the paper describing it:
 }
 ```
 
-To cite this repository (the published vocabulary snapshot and its tooling), use
-[`CITATION.cff`](CITATION.cff) (GitHub's **Cite this repository** button).
+To cite this repository (the archived vocabulary snapshot and its tooling), use its Zenodo DOI,
+[doi:10.5281/zenodo.23455455](https://doi.org/10.5281/zenodo.23455455), which always resolves to the latest release; each release
+also has its own version DOI on Zenodo. [`CITATION.cff`](CITATION.cff) (GitHub's **Cite this
+repository** button) has the full metadata.
