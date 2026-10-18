@@ -44,8 +44,8 @@ ui:
       # sync with METHODOLOGY_URL in scripts/prepare_vocab.py and
       # scripts/patch_scheme_links.sh (scheme page, below "License").
       - title: "Methodology"
-        # Our own copy of the Google Doc, rebuilt on every deploy by
-        # scripts/export_methodology.sh, so it opens in the same tab.
+        # Our own copy of the Google Doc (snapshot in methodology/, rendered by
+        # scripts/render_methodology.sh), so it opens in the same tab.
         url: "https://fair2adapt.github.io/climate-connectivity-taxonomy/methodology/"
       # Must match DEFAULT_LICENSE in scripts/prepare_vocab.py.
       - title: "Licence: CC BY 4.0"

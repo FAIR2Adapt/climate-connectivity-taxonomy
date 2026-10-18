@@ -27,7 +27,7 @@ marker='cct-scheme-links'
 
 # --- Link targets. Keep in sync with the footer links in config.yaml, and the ----
 # methodology URL with METHODOLOGY_URL in scripts/prepare_vocab.py. The methodology
-# page is on this site (scripts/export_methodology.sh), so it opens in the same tab.
+# page is on this site (scripts/render_methodology.sh), so it opens in the same tab.
 methodology_url='https://fair2adapt.github.io/climate-connectivity-taxonomy/methodology/'
 hub_url='https://connectivity-hub.weadapt.org/'
 # ----------------------------------------------------------------------------------

@@ -5,12 +5,12 @@ name: Build and deploy Climate Connectivity Taxonomy to GitHub Pages
 # only from the versioned concepts.ttl in the repo, so deploys are fast and never
 # degraded by hub flakiness. The data is refreshed separately by refresh-vocab.yml,
 # which fetches from the hub and commits a fresh concepts.ttl (only when complete);
-# that commit then triggers this workflow.
+# it then starts this workflow.
 #
-# The one live fetch at build time is the methodology: the Google Doc owned by the
-# connectivity-hub team is the source of truth, and every build re-exports it to
-# /methodology/ (HTML + PDF) via scripts/export_methodology.sh. If that export
-# fails, the build fails and the previous site stays online.
+# The methodology page (/methodology/, HTML + PDF) is rendered from the committed
+# snapshot in methodology/ by scripts/render_methodology.sh. That snapshot is taken
+# from the connectivity-hub team's Google Doc by refresh-vocab.yml, like
+# concepts.ttl, so this workflow never contacts Google either.
 #
 # Pull requests run the build without deploying and attach the built site as a
 # downloadable "site-preview" artifact, so changes can be reviewed before merging.
@@ -21,6 +21,7 @@ on:
     branches: [main]
     paths:
       - concepts.ttl
+      - methodology/**
       - config.yaml
       - scripts/**
       - .github/workflows/pages.yml
@@ -28,10 +29,11 @@ on:
   pull_request:
     paths:
       - concepts.ttl
+      - methodology/**
       - config.yaml
       - scripts/**
       - .github/workflows/pages.yml
-  # let the maintainer rebuild by hand (also picks up methodology doc edits)
+  # let the maintainer rebuild from the committed data by hand
   workflow_dispatch:
 
 permissions:
@@ -115,10 +117,9 @@ jobs:
       - name: Install pandoc
         run: sudo apt-get update -q && sudo apt-get install -y -q pandoc
 
-      - name: Export the methodology page from the Google Doc
-        # Re-exported on every build, whether or not the doc changed, so the site's
-        # HTML page and PDF always come from one consistent snapshot of the doc.
-        run: sh scripts/export_methodology.sh public/methodology
+      - name: Render the methodology page
+        # From the committed snapshot in methodology/ (no Google fetch).
+        run: sh scripts/render_methodology.sh methodology public/methodology
 
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request'

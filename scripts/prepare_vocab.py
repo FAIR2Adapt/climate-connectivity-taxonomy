@@ -25,8 +25,8 @@ DEFAULT_LICENSE = URIRef("https://creativecommons.org/licenses/by/4.0/")
 # Document describing how the taxonomy was built, linked from the concept scheme
 # with dct:references so the link travels with the data (the site footer links to
 # it too, and scripts/patch_scheme_links.sh shows it on the scheme page —
-# keep all three in sync). It points to the site's /methodology/ page, which every
-# deploy re-exports from the team's Google Doc (scripts/export_methodology.sh);
+# keep all three in sync). It points to the site's /methodology/ page, rendered
+# from the snapshot of the team's Google Doc in methodology/ (refresh-vocab.yml);
 # replace with the Zenodo concept DOI once the taxonomy is deposited there.
 METHODOLOGY_URL = URIRef(
     "https://fair2adapt.github.io/climate-connectivity-taxonomy/methodology/"

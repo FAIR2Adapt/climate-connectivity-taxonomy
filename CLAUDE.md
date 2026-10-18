@@ -26,10 +26,11 @@ Data **refresh** is decoupled from site **deploy** (so a flaky hub can never pub
 vocabulary). Two workflows:
 
 - **`refresh-vocab.yml`** (scheduled weekly + manual `workflow_dispatch`) runs `fetch_vocab.py`
-  and commits `concepts.ttl` **only when the fetch is complete**. That commit then triggers
-  `pages.yml`.
-- **`pages.yml`** (the deploy) builds from the committed `concepts.ttl` — **no live hub fetch** —
-  on any push that changes `concepts.ttl`/`config.yaml`/`scripts/**`/the workflow, or manually.
+  and commits `concepts.ttl` **only when the fetch is complete**; a second job snapshots the
+  methodology into `methodology/`. If either committed, it then starts `pages.yml`.
+- **`pages.yml`** (the deploy) builds from the committed `concepts.ttl` and `methodology/` — **no
+  live hub or Google fetch** — on any push that changes them/`config.yaml`/`scripts/**`/the
+  workflow, when started by `refresh-vocab.yml`, or manually.
 
 The deploy builds the site by, in order:
 
@@ -60,22 +61,29 @@ The deploy builds the site by, in order:
    `hasTopConcept`/`narrower` array by prefLabel; `fix_tree_indent.py` injects CSS aligning leaf
    rows with their siblings. The tree is fetched client-side from the scheme's `index.json` (see
    skohub `App.jsx`), so sorting that built file sorts the rendered tree.
-4. **`scripts/export_methodology.sh public/methodology`** — the one live fetch at deploy time. The
-   methodology Google Doc (owned by the connectivity-hub team) is the source of truth; every build
-   re-exports it (Markdown → DOCX → PDF → Markdown, accepted only if both Markdown copies match) and
-   renders the **DOCX** to `/methodology/index.html` + `media/` with pandoc (Google's Markdown export
-   downsamples figures and drops some, so it's only used for the consistency check). Aborts non-zero on a
-   bad export, so the previous site stays online. The footer, the scheme page
-   (`patch_scheme_links.sh`) and `dct:references` (`prepare_vocab.py`) all link to `/methodology/`.
-   Doc edits reach the site at the next deploy (any push, or a manual run of `pages.yml`).
+4. **`scripts/render_methodology.sh methodology public/methodology`** renders the committed
+   methodology snapshot: the **DOCX** to `/methodology/index.html` + `media/` with pandoc, plus the
+   PDF download (Google's Markdown export downsamples figures and drops some, so it isn't rendered).
+   No Google fetch at deploy time. The footer, the scheme page (`patch_scheme_links.sh`) and
+   `dct:references` (`prepare_vocab.py`) all link to `/methodology/`.
+
+The **methodology snapshot** in `methodology/` (`methodology.md`/`.docx`/`.pdf`, `exported_at`) is
+taken from the connectivity-hub team's Google Doc, which stays the source of truth, by
+`scripts/fetch_methodology.sh methodology` in a second job of `refresh-vocab.yml`. It exports
+Markdown → DOCX → PDF → Markdown, accepts the export only if both Markdown copies match, aborts
+non-zero on a bad export, and rewrites `methodology/` **only when the Markdown changed** (DOCX/PDF
+embed timestamps, so they differ on every download). Don't edit `methodology/` by hand.
+
+**Pushes made with `GITHUB_TOKEN` don't trigger other workflows**, so `refresh-vocab.yml` ends with
+a job that runs `gh workflow run pages.yml` when either job committed (needs `actions: write`).
 
 Pull requests run `pages.yml` without deploying and upload the built site as a `site-preview`
 artifact (unzip into a folder named `climate-connectivity-taxonomy`, run `python3 -m http.server`
 in its parent, open `http://localhost:8000/climate-connectivity-taxonomy/`).
 
 Refresh the **data** from the hub: run `refresh-vocab.yml` (Actions → Run workflow) or wait for the
-weekly cron; it commits a fresh `concepts.ttl` only if the fetch is complete, which triggers a
-deploy. Rebuild the **site** from existing data: run `pages.yml` manually (no hub fetch). So
+weekly cron; it commits a fresh `concepts.ttl` only if the fetch is complete (and the methodology
+only if it changed), then starts a deploy. Rebuild the **site** from existing data: run `pages.yml` manually (no hub fetch). So
 `concepts.ttl` is a static, versioned record of the last *complete* published vocabulary, and it
 feeds both the public site and the **internal Skosmos preview**. `refresh-vocab.yml` needs
 `permissions: contents: write` to push the snapshot.

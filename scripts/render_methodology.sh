@@ -1,89 +1,44 @@
 #!/bin/sh
-# Export the methodology Google Doc and publish it as part of the site:
+# Render the committed methodology snapshot as a page of the site:
 #   OUTDIR/index.html        the methodology as a web page, styled like the site
 #   OUTDIR/media/            its figures, at full resolution
 #   OUTDIR/methodology.pdf   the same content as a PDF download
 #
-# WHY. The methodology is written in a Google Doc owned by the connectivity-hub
-# team, which stays the source of truth (they keep editing it there). Linking the
-# Google Doc directly makes the site depend on its sharing settings and ownership,
-# and a Google Doc reads poorly on phones and isn't indexed with the site. So every
-# site build (pages.yml) re-exports the doc — whether or not it changed — and the
-# site links to its own copy at /methodology/.
+# The snapshot in SRC (methodology.docx/.pdf/exported_at) is taken from the
+# connectivity-hub team's Google Doc by scripts/fetch_methodology.sh in the refresh
+# workflow; this script never contacts Google, so the build is offline.
 #
 # SOURCE FORMAT. The page is converted from the Word (.docx) export. Google's
 # Markdown export downsamples the figures (~600 px) and drops some altogether (the
 # cover screenshot); the .docx export keeps every figure at full resolution.
 #
-# CONSISTENCY. Google produces each format in a separate download, so an edit could
-# land in between. We export Markdown -> DOCX -> PDF -> Markdown and only accept the
-# export when both Markdown copies are identical (retrying a few times), so the page
-# and the PDF always show the same content. (The Markdown is used only for this
-# check: unlike the .docx, it has no embedded timestamps, so it is byte-stable.)
-#
-# SAFETY. Like fetch_vocab.py, this aborts non-zero rather than publish garbage: if
-# Google returns an error, a login page or a suspiciously small file, the deploy
-# fails and GitHub Pages keeps serving the previous site.
-#
-# Usage: sh scripts/export_methodology.sh OUTDIR      (needs curl, perl, pandoc)
+# Usage: sh scripts/render_methodology.sh SRC OUTDIR      (needs pandoc, perl)
 set -eu
 
-# --- The methodology Google Doc (must be viewable by anyone with the link). -------
+# --- The methodology Google Doc, linked from the page as the working document. ---
 doc_id='1uPh00X7Et_E4Wsp4tqeIurVzxPW4gsuEXY136ghXTzc'
 # ----------------------------------------------------------------------------------
 doc_url="https://docs.google.com/document/d/${doc_id}/view"
-export_url="https://docs.google.com/document/d/${doc_id}/export?format="
-# Sanity checks on the export: minimum sizes and a phrase the doc must contain.
-min_md_bytes=20000
-min_pdf_bytes=50000
-must_contain='Climate Connectivity Taxonomy'
-attempts=3
 
-out=${1:?usage: export_methodology.sh OUTDIR}
+src=${1:?usage: render_methodology.sh SRC OUTDIR}
+out=${2:?usage: render_methodology.sh SRC OUTDIR}
+for f in methodology.docx methodology.pdf exported_at; do
+  if [ ! -f "$src/$f" ]; then
+    echo "RENDER ERROR: $src/$f missing (run scripts/fetch_methodology.sh $src)." >&2
+    exit 1
+  fi
+done
+src=$(cd "$src" && pwd)
 mkdir -p "$out"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-fetch() { # fetch FORMAT DEST
-  curl -fsSL --retry 3 --retry-delay 5 -o "$2" "${export_url}$1"
-}
-
-ok=''
-i=1
-while [ "$i" -le "$attempts" ]; do
-  if fetch md "$tmp/a.md" && fetch docx "$tmp/doc.docx" && fetch pdf "$tmp/doc.pdf" \
-     && fetch md "$tmp/b.md"; then
-    if cmp -s "$tmp/a.md" "$tmp/b.md"; then ok=1; break; fi
-    echo "Methodology doc changed during export (attempt $i/$attempts); retrying." >&2
-  else
-    echo "Methodology export failed (attempt $i/$attempts); retrying." >&2
-  fi
-  i=$((i + 1))
-  sleep 10
-done
-if [ -z "$ok" ]; then
-  echo "EXPORT ERROR: no consistent export of the methodology doc after $attempts attempts." >&2
-  exit 1
-fi
-
-md_bytes=$(wc -c < "$tmp/a.md")
-pdf_bytes=$(wc -c < "$tmp/doc.pdf")
-if [ "$md_bytes" -lt "$min_md_bytes" ] || ! grep -qF "$must_contain" "$tmp/a.md"; then
-  echo "EXPORT ERROR: Markdown export looks wrong (${md_bytes} bytes, or missing '$must_contain')." >&2
-  echo "Is the Google Doc still shared as 'anyone with the link can view'?" >&2
-  exit 1
-fi
-if [ "$pdf_bytes" -lt "$min_pdf_bytes" ] || [ "$(head -c 4 "$tmp/doc.pdf")" != "%PDF" ]; then
-  echo "EXPORT ERROR: PDF export looks wrong (${pdf_bytes} bytes or not a PDF)." >&2
-  exit 1
-fi
-
 # DOCX -> HTML fragment, figures extracted to OUTDIR/media/ (pandoc names them
 # media/imageN.*, relative to the working directory, so run it from OUTDIR).
 rm -rf "$out/media"
-(cd "$out" && pandoc -f docx -t html5 --wrap=none --extract-media=. "$tmp/doc.docx" -o "$tmp/body.html")
+(cd "$out" && pandoc -f docx -t html5 --wrap=none --extract-media=. "$src/methodology.docx" -o "$tmp/body.html")
 if ! grep -q '<img' "$tmp/body.html"; then
-  echo "EXPORT ERROR: no figures found in the converted page." >&2
+  echo "RENDER ERROR: no figures found in the converted page." >&2
   exit 1
 fi
 # - drop the fixed sizes pandoc copies from Word (in inches), so CSS can scale
@@ -92,8 +47,8 @@ fi
 perl -pi -e 's|<img src="([^"]*)"[^>]*/>|<a class="figure" href="$1"><img src="$1" alt="" loading="lazy"></a>|g;
              s/<table/<div class="table-wrap"><table/g; s|</table>|</table></div>|g' "$tmp/body.html"
 
-exported=$(date -u '+%Y-%m-%d %H:%M UTC')
-cp "$tmp/doc.pdf" "$out/methodology.pdf"
+exported=$(cat "$src/exported_at")
+cp "$src/methodology.pdf" "$out/methodology.pdf"
 
 # The page lives at <site>/methodology/, so site assets are one level up. Colours
 # and font follow the SkoHub theme in config.yaml.
@@ -185,4 +140,4 @@ cat <<'EOF'
 EOF
 } > "$out/index.html"
 
-echo "EXPORT OK: methodology page, $(ls "$out/media" | wc -l) figure(s) and PDF written to $out (pdf ${pdf_bytes} B, exported ${exported})."
+echo "Methodology page, $(ls "$out/media" | wc -l) figure(s) and PDF written to $out (exported ${exported})."
