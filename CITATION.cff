@@ -2,8 +2,13 @@ cff-version: 1.2.0
 message: "If you use the Climate Connectivity Taxonomy, please cite the paper describing it (preferred-citation)."
 type: dataset
 title: "Climate Connectivity Taxonomy"
-version: "1.1.0"
+version: "1.1.1"
 date-released: "2026-10-18"
+doi: "10.5281/zenodo.23455455"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23455455"
+    description: "Zenodo concept DOI (all versions, resolves to the latest)"
 abstract: >-
   A SKOS vocabulary connecting dispersed climate change adaptation and disaster
   risk knowledge, driving the data connections in the Climate Connectivity Hub.

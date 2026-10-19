@@ -7,7 +7,7 @@
     { "name": "Fouilloux, Anne", "affiliation": "LifeWatch ERIC", "orcid": "0000-0002-1784-2920" },
     { "name": "Filiz, Elifsu", "affiliation": "Simula Research Laboratory", "orcid": "0000-0003-3744-7781" }
   ],
-  "version": "1.1.0",
+  "version": "1.1.1",
   "license": "cc-by-4.0",
   "keywords": [
     "SKOS",
