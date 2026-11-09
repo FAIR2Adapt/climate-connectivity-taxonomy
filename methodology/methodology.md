@@ -65,7 +65,7 @@ Before suggesting a new concept, you may want to familiarise yourself with the C
 
 Version 1.1: [http\://connectivity-hub.com](http://connectivity-hub.com) 
 
-This version builds on the previous and was developed through the **DIRECTED** and **FAIR2Adapt** projects and includes the development of a **SKOS-supported web tool and repository**, available at [https\://fair2adapt.github.io/climate-connectivity-taxonomy/](https://fair2adapt.github.io/climate-connectivity-taxonomy/). The tool enables users to search, filter and visualise concepts within the Climate Connectivity Taxonomy, with potential for future development of more advanced Boolean and query-based search functionality. 
+This version builds on the previous and was developed through the **DIRECTED** and **FAIR2Adapt** projects and includes the development of a **SKOS-supported web tool and repository**, available at: [https\://fair2adapt.github.io/climate-connectivity-taxonomy/connectivity-hub.com/terms/index.html](https://fair2adapt.github.io/climate-connectivity-taxonomy/connectivity-hub.com/terms/index.html) The tool enables users to search, filter and visualise concepts within the Climate Connectivity Taxonomy, with potential for future development of more advanced Boolean and query-based search functionality. 
 
 ![][image4]
 
